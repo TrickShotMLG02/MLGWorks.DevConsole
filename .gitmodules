@@ -1,0 +1,3 @@
+[submodule "Assets/MLGWorks/MLGWorks.Utils"]
+	path = Assets/MLGWorks/MLGWorks.Utils
+	url = https://github.com/TrickShotMLG02/MLGWorks.Utils.git
