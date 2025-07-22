@@ -6,12 +6,14 @@ namespace MLGWorks.DevConsole.Runtime.Commands
     public static class BuiltInCommands
     {
         [Command("help", "Clears console output", "?", "h")]
-        public static void Help()
+        public static string Help()
         {
+            string result = "";
             foreach (var cmd in CommandManager.CommandInfos)
             {
-                ConsoleUI.Instance.AppendToOutput($"{cmd.GetHelp()}");
+                result += $"{cmd.GetHelp()}\n";
             }
+            return result.TrimEnd();
         }
 
         [Command("clear", "Clears console output", "cls")]

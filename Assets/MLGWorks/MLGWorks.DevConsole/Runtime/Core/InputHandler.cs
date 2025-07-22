@@ -14,7 +14,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
         {
             string result = null;
             CommandManager.TryExecute(input, out result);
-            ConsoleUI.Instance.AppendToOutput(result);
+
+            if (result != null)
+                ConsoleUI.Instance.AppendToOutput(result);
         }
     }
 }

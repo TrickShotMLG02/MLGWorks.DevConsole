@@ -30,7 +30,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
 
         private void OnDestroy()
         {
-            Logger.Instance.OnNewLogBatch -= handleLogger;
+            try
+            {
+                Logger.Instance.OnNewLogBatch -= handleLogger;
+            }
+            catch { }
         }
 
         private void handleLogger(List<LogEntry> logBatch)

@@ -90,14 +90,34 @@ namespace MLGWorks.DevConsole.Runtime.Commands
 
                 for (int i = 0; i < parameters.Length; i++)
                 {
+                    var param = parameters[i];
+
+                    // Handle params (variable-length) parameter
+                    bool isParams = Attribute.IsDefined(param, typeof(ParamArrayAttribute));
+                    if (isParams)
+                    {
+                        var elementType = param.ParameterType.GetElementType();
+                        int paramsCount = args.Length - i;
+                        Array paramsArray = Array.CreateInstance(elementType, paramsCount);
+
+                        for (int j = 0; j < paramsCount; j++)
+                        {
+                            paramsArray.SetValue(Convert.ChangeType(args[j], elementType), j);
+                        }
+
+                        parsedArgs[i] = paramsArray;
+                        break; // No more parameters after params[]
+                    }
+
                     if (i >= args.Length)
-                        parsedArgs[i] = parameters[i].DefaultValue;
+                        parsedArgs[i] = param.DefaultValue;
                     else
-                        parsedArgs[i] = Convert.ChangeType(args[i], parameters[i].ParameterType);
+                        parsedArgs[i] = Convert.ChangeType(args[i], param.ParameterType);
                 }
 
+
                 var returnValue = command.Method.Invoke(null, parsedArgs);
-                result = returnValue?.ToString() ?? "OK";
+                result = returnValue?.ToString() ?? null;
                 return true;
             }
             catch (Exception ex)
