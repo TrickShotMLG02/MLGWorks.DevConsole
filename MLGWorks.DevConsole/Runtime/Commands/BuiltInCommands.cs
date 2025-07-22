@@ -5,7 +5,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands
 {
     public static class BuiltInCommands
     {
-        [Command("help", "Clears console output", "?", "h")]
+        [Command("help", "Displays all available commands and their usage", "?", "h")]
         public static string Help()
         {
             string result = "";
@@ -26,6 +26,12 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         public static void LoggerTest()
         {
             Logger.EmitTestLogs();
+        }
+
+        [Command("add", "adds two numbers")]
+        public static string Add(float a, float b)
+        {
+            return (a + b).ToString();
         }
     }
 }

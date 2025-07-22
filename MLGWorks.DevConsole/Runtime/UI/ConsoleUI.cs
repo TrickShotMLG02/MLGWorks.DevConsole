@@ -1,10 +1,13 @@
+using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.Core;
 using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = MLGWorks.Utils.Logging.Logger;
 
 namespace MLGWorks.DevConsole.Runtime.UI
 {
@@ -30,6 +33,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         [SerializeField] private TMP_InputField inputField;
         [SerializeField] private TMP_Text outputText;
         [SerializeField] private ScrollRect scrollRect;
+        [SerializeField] private TMP_Text autocompleteText;
 
         [Header("Console Log Colors")]
         [SerializeField] private Color debugColor = new Color(0.502f, 0.502f, 0.502f); // #808080
@@ -40,6 +44,10 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
         [Header("Console Settings")]
         [SerializeField] private int maxLines = 1000;
+        public bool enableSuggestions = true;
+
+        // TODO: REMOVE THIS AND MAP IT TO A KEY
+        public bool performAutoComplete = false;
 
         private List<string> logLines = new List<string>();
         private readonly Dictionary<LogLevel, Color> levelColors = new();
@@ -109,6 +117,40 @@ namespace MLGWorks.DevConsole.Runtime.UI
             };
 
             return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{message}</color>";
+        }
+
+        private void Update()
+        {
+            CommandInfo matchedCommand = null;
+
+            if (enableSuggestions)
+            {
+                string input = inputField.text;
+
+                var suggestion = autocomplete.GetSuggestion(input, out matchedCommand);
+                if (!string.IsNullOrEmpty(suggestion) && suggestion != input)
+                {
+                    autocompleteText.text = suggestion;
+
+                    matchedCommand = matchedCommand.Name == input ? null : matchedCommand;
+                }
+                else
+                {
+                    autocompleteText.text = string.Empty;
+                    matchedCommand = null;
+                }
+            }
+
+            if (performAutoComplete && matchedCommand != null)
+            {
+                performAutoComplete = false;
+                inputField.text = matchedCommand.Name;
+
+                // move cursor to the end of the auto-completed text
+                inputField.caretPosition = inputField.text.Length;
+                inputField.selectionAnchorPosition = inputField.text.Length;
+                inputField.selectionFocusPosition = inputField.text.Length;
+            }
         }
     }
 }
