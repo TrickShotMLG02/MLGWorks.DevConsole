@@ -1,0 +1,20 @@
+using MLGWorks.DevConsole.Runtime.Commands;
+using MLGWorks.DevConsole.Runtime.UI;
+using UnityEngine;
+
+namespace MLGWorks.DevConsole.Runtime.Core
+{
+    /// <summary>
+    /// Captures and processes input from the console input field.
+    /// </summary>
+    [DisallowMultipleComponent]
+    public class InputHandler : MonoBehaviour
+    {
+        public void SubmitCommand(string input)
+        {
+            string result = null;
+            CommandManager.TryExecute(input, out result);
+            ConsoleUI.Instance.AppendToOutput(result);
+        }
+    }
+}
