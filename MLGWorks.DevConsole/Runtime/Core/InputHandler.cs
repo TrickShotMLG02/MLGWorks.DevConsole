@@ -1,6 +1,7 @@
 using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.UI;
 using UnityEngine;
+using MLGWorks.Utils.Logging;
 
 namespace MLGWorks.DevConsole.Runtime.Core
 {
@@ -16,7 +17,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             CommandManager.TryExecute(input, out result);
 
             if (result != null)
-                ConsoleUI.Instance.AppendToOutput(result);
+                ConsoleUI.Instance.AppendToOutput(result, LogLevel.Output);
         }
     }
 }

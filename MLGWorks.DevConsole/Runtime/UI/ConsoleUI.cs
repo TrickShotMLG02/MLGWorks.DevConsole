@@ -1,6 +1,7 @@
 using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.Core;
 using MLGWorks.Utils.Logging;
+using MLGWorks.Utils.Patterns;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,96 +25,102 @@ namespace MLGWorks.DevConsole.Runtime.UI
     /// Singleton managing the console UI display and input.
     /// </summary>
     [RequireComponent(typeof(InputHandler)), DisallowMultipleComponent]
-    public class ConsoleUI : MonoBehaviour
+    public class ConsoleUI : Singleton<ConsoleUI>
     {
-        public static ConsoleUI Instance { get; private set; }
-
         [Header("References")]
-        [SerializeField] private Canvas consoleCanvas;
-        [SerializeField] private TMP_InputField inputField;
-        [SerializeField] private TMP_Text outputText;
-        [SerializeField] private ScrollRect scrollRect;
-        [SerializeField] private TMP_Text autocompleteText;
+        [SerializeField] private Canvas _consoleCanvas;
+        [SerializeField] private TMP_InputField _inputField;
+        [SerializeField] private TMP_Text _outputText;
+        [SerializeField] private ScrollRect _scrollRect;
+        [SerializeField] private TMP_Text _autocompleteText;
 
         [Header("Console Log Colors")]
-        [SerializeField] private Color debugColor = new Color(0.502f, 0.502f, 0.502f); // #808080
-        [SerializeField] private Color infoColor = new Color(0.753f, 0.753f, 0.753f); // #C0C0C0
-        [SerializeField] private Color warningColor = new Color(0.976f, 0.780f, 0.310f); // #F9C74F
-        [SerializeField] private Color errorColor = new Color(1.000f, 0.176f, 0.188f); // #FF2D30
-        [SerializeField] private Color commandColor = new Color(0.565f, 0.745f, 0.427f); // #90BE6D
+        [SerializeField] private Color _debugColor = new Color(0.502f, 0.502f, 0.502f); // #808080
+        [SerializeField] private Color _infoColor = new Color(0.753f, 0.753f, 0.753f); // #C0C0C0
+        [SerializeField] private Color _warningColor = new Color(0.976f, 0.780f, 0.310f); // #F9C74F
+        [SerializeField] private Color _errorColor = new Color(1.000f, 0.176f, 0.188f); // #FF2D30
+        [SerializeField] private Color _outputColor = new Color(0.565f, 0.745f, 0.427f); // #90BE6D
+        [SerializeField] private Color _commandColor = new Color(0f, 0.847f, 1f); // #00D8FF
 
         [Header("Console Settings")]
-        [SerializeField] private int maxLines = 1000;
+        [SerializeField] private string _commandPrefix = "> ";
+        public string CommandPrefix => _commandPrefix;
+        [SerializeField] private int _maxLinesInBuffer = 1000;
         public bool enableSuggestions = true;
 
         // TODO: REMOVE THIS AND MAP IT TO A KEY
         public bool performAutoComplete = false;
 
-        private List<string> logLines = new List<string>();
-        private readonly Dictionary<LogLevel, Color> levelColors = new();
-        private AutocompleteEngine autocomplete;
-        private ConsoleHistory history;
+        private List<string> _logLines = new List<string>();
+        private readonly Dictionary<LogLevel, Color> _levelColors = new();
+        private AutocompleteEngine _autocomplete;
+        private ConsoleHistory _history;
 
-        private void Awake()
+        protected override void Awake()
         {
-            Instance = this;
-            consoleCanvas.gameObject.SetActive(false);
-            autocomplete = new AutocompleteEngine();
-            history = new ConsoleHistory();
+            base.Awake();
+
+            _consoleCanvas.gameObject.SetActive(false);
+            _autocomplete = new AutocompleteEngine();
+            _history = new ConsoleHistory();
 
             // Init color dictionary
-            levelColors[LogLevel.Debug] = debugColor;
-            levelColors[LogLevel.Info] = infoColor;
-            levelColors[LogLevel.Warning] = warningColor;
-            levelColors[LogLevel.Error] = errorColor;
+            _levelColors[LogLevel.Debug] = _debugColor;
+            _levelColors[LogLevel.Info] = _infoColor;
+            _levelColors[LogLevel.Warning] = _warningColor;
+            _levelColors[LogLevel.Error] = _errorColor;
+            _levelColors[LogLevel.Command] = _commandColor;
+            _levelColors[LogLevel.Output] = _outputColor;
         }
 
         public void ToggleVisibility()
         {
-            consoleCanvas.gameObject.SetActive(!consoleCanvas.gameObject.activeSelf);
-            if (consoleCanvas.gameObject.activeSelf)
-                inputField.ActivateInputField();
+            _consoleCanvas.gameObject.SetActive(!_consoleCanvas.gameObject.activeSelf);
+            if (_consoleCanvas.gameObject.activeSelf)
+                _inputField.ActivateInputField();
         }
 
         public void OnInputSubmit()
         {
-            var cmd = inputField.text;
-            history.Add(cmd);
+            var cmd = _inputField.text;
+            _history.Add(cmd);
             GetComponent<InputHandler>().SubmitCommand(cmd);
-            inputField.text = string.Empty;
-            inputField.ActivateInputField();
+            _inputField.text = string.Empty;
+            _inputField.ActivateInputField();
         }
 
         public void AppendToOutput(string message, LogLevel? level = null)
         {
             string msg = FormatMessage(level, message);
-            logLines.Add(msg);
-            if (logLines.Count > maxLines)
+            _logLines.Add(msg);
+            if (_logLines.Count > _maxLinesInBuffer)
             {
-                logLines.RemoveAt(0); // remove oldest line
+                _logLines.RemoveAt(0); // remove oldest line
             }
 
-            outputText.text = string.Join("\n", logLines);
+            _outputText.text = string.Join("\n", _logLines);
 
             Canvas.ForceUpdateCanvases(); // force layout updates
-            scrollRect.verticalNormalizedPosition = 0f; // scroll to bottom
+            _scrollRect.verticalNormalizedPosition = 0f; // scroll to bottom
         }
 
         public void ClearLogs()
         {
-            outputText.text = "";
-            logLines.Clear();
+            _outputText.text = "";
+            _logLines.Clear();
         }
 
         private string FormatMessage(LogLevel? level, string message)
         {
             Color color = level switch
             {
-                LogLevel.Debug => levelColors[LogLevel.Debug],
-                LogLevel.Info => levelColors[LogLevel.Info],
-                LogLevel.Warning => levelColors[LogLevel.Warning],
-                LogLevel.Error => levelColors[LogLevel.Error],
-                _ => commandColor
+                LogLevel.Debug => _levelColors[LogLevel.Debug],
+                LogLevel.Info => _levelColors[LogLevel.Info],
+                LogLevel.Warning => _levelColors[LogLevel.Warning],
+                LogLevel.Error => _levelColors[LogLevel.Error],
+                LogLevel.Command => _levelColors[LogLevel.Command],
+                LogLevel.Output => _levelColors[LogLevel.Output],
+                _ => Color.white
             };
 
             return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{message}</color>";
@@ -125,18 +132,18 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
             if (enableSuggestions)
             {
-                string input = inputField.text;
+                string input = _inputField.text;
 
-                var suggestion = autocomplete.GetSuggestion(input, out matchedCommand);
+                var suggestion = _autocomplete.GetSuggestion(input, out matchedCommand);
                 if (!string.IsNullOrEmpty(suggestion) && suggestion != input)
                 {
-                    autocompleteText.text = suggestion;
+                    _autocompleteText.text = suggestion;
 
                     matchedCommand = matchedCommand.Name == input ? null : matchedCommand;
                 }
                 else
                 {
-                    autocompleteText.text = string.Empty;
+                    _autocompleteText.text = string.Empty;
                     matchedCommand = null;
                 }
             }
@@ -144,12 +151,12 @@ namespace MLGWorks.DevConsole.Runtime.UI
             if (performAutoComplete && matchedCommand != null)
             {
                 performAutoComplete = false;
-                inputField.text = matchedCommand.Name;
+                _inputField.text = matchedCommand.Name;
 
                 // move cursor to the end of the auto-completed text
-                inputField.caretPosition = inputField.text.Length;
-                inputField.selectionAnchorPosition = inputField.text.Length;
-                inputField.selectionFocusPosition = inputField.text.Length;
+                _inputField.caretPosition = _inputField.text.Length;
+                _inputField.selectionAnchorPosition = _inputField.text.Length;
+                _inputField.selectionFocusPosition = _inputField.text.Length;
             }
         }
     }
