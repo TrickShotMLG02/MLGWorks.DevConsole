@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace MLGWorks.DevConsole.Runtime.UI
 {
@@ -24,17 +25,23 @@ namespace MLGWorks.DevConsole.Runtime.UI
     {
         public static ConsoleUI Instance { get; private set; }
 
+        [Header("References")]
         [SerializeField] private Canvas consoleCanvas;
         [SerializeField] private TMP_InputField inputField;
         [SerializeField] private TMP_Text outputText;
+        [SerializeField] private ScrollRect scrollRect;
 
         [Header("Console Log Colors")]
-        [SerializeField] private Color debugColor = new(0.5f, 0.5f, 0.5f);
-        [SerializeField] private Color infoColor = Color.white;
-        [SerializeField] private Color warningColor = new(1f, 0.64f, 0f);
-        [SerializeField] private Color errorColor = new(1f, 0.33f, 0.33f);
-        [SerializeField] private Color commandOutputColor = Color.cyan;
+        [SerializeField] private Color debugColor = new Color(0.502f, 0.502f, 0.502f); // #808080
+        [SerializeField] private Color infoColor = new Color(0.753f, 0.753f, 0.753f); // #C0C0C0
+        [SerializeField] private Color warningColor = new Color(0.976f, 0.780f, 0.310f); // #F9C74F
+        [SerializeField] private Color errorColor = new Color(1.000f, 0.176f, 0.188f); // #FF2D30
+        [SerializeField] private Color commandColor = new Color(0.565f, 0.745f, 0.427f); // #90BE6D
 
+        [Header("Console Settings")]
+        [SerializeField] private int maxLines = 1000;
+
+        private List<string> logLines = new List<string>();
         private readonly Dictionary<LogLevel, Color> levelColors = new();
         private AutocompleteEngine autocomplete;
         private ConsoleHistory history;
@@ -71,12 +78,23 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
         public void AppendToOutput(string message, LogLevel? level = null)
         {
-            outputText.text += FormatMessage(level, message) + "\n";
+            string msg = FormatMessage(level, message);
+            logLines.Add(msg);
+            if (logLines.Count > maxLines)
+            {
+                logLines.RemoveAt(0); // remove oldest line
+            }
+
+            outputText.text = string.Join("\n", logLines);
+
+            Canvas.ForceUpdateCanvases(); // force layout updates
+            scrollRect.verticalNormalizedPosition = 0f; // scroll to bottom
         }
 
         public void ClearLogs()
         {
-            outputText.text = string.Empty;
+            outputText.text = "";
+            logLines.Clear();
         }
 
         private string FormatMessage(LogLevel? level, string message)
@@ -87,7 +105,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
                 LogLevel.Info => levelColors[LogLevel.Info],
                 LogLevel.Warning => levelColors[LogLevel.Warning],
                 LogLevel.Error => levelColors[LogLevel.Error],
-                _ => commandOutputColor
+                _ => commandColor
             };
 
             return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{message}</color>";
