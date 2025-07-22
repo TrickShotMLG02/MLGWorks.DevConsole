@@ -1,3 +1,5 @@
+using MLGWorks.DevConsole.Runtime.UI;
+using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,6 +68,9 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         {
             result = string.Empty;
             if (string.IsNullOrWhiteSpace(input)) return false;
+
+            // print entered command to terminal
+            ConsoleUI.Instance.AppendToOutput($"> {input}", LogLevel.Command);
 
             var parts = input.Split(' ');
             var commandName = parts[0].ToLower();

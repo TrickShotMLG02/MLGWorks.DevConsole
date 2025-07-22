@@ -73,17 +73,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 93235b6247724424485e798342a410a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  consoleCanvas: {fileID: 186697612104134907}
-  inputField: {fileID: 6946018429935800977}
-  outputText: {fileID: 4349586901769653352}
-  scrollRect: {fileID: 228678321711671782}
-  autocompleteText: {fileID: 4194107634190101042}
-  debugColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
-  infoColor: {r: 0.7529412, g: 0.7529412, b: 0.7529412, a: 1}
-  warningColor: {r: 0.9764706, g: 0.78039217, b: 0.30980393, a: 1}
-  errorColor: {r: 1, g: 0.1764706, b: 0.1882353, a: 1}
-  commandColor: {r: 0.565, g: 0.745, b: 0.427, a: 1}
-  maxLines: 1000
+  _consoleCanvas: {fileID: 186697612104134907}
+  _inputField: {fileID: 6946018429935800977}
+  _outputText: {fileID: 4349586901769653352}
+  _scrollRect: {fileID: 228678321711671782}
+  _autocompleteText: {fileID: 4194107634190101042}
+  _debugColor: {r: 0.502, g: 0.502, b: 0.502, a: 1}
+  _infoColor: {r: 0.753, g: 0.753, b: 0.753, a: 1}
+  _warningColor: {r: 0.976, g: 0.78, b: 0.31, a: 1}
+  _errorColor: {r: 1, g: 0.176, b: 0.188, a: 1}
+  _outputColor: {r: 0.5647059, g: 0.74509805, b: 0.42745098, a: 1}
+  _commandColor: {r: 0, g: 0.84705883, b: 1, a: 1}
+  _commandPrefix: '> '
+  _maxLinesInBuffer: 1000
+  enableSuggestions: 1
+  performAutoComplete: 0
 --- !u!1 &1084892956777558168
 GameObject:
   m_ObjectHideFlags: 0
