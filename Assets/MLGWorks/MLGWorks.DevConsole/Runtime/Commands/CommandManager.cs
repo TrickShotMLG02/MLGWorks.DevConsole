@@ -115,7 +115,6 @@ namespace MLGWorks.DevConsole.Runtime.Commands
                         parsedArgs[i] = Convert.ChangeType(args[i], param.ParameterType);
                 }
 
-
                 var returnValue = command.Method.Invoke(null, parsedArgs);
                 result = returnValue?.ToString() ?? null;
                 return true;
@@ -149,16 +148,18 @@ namespace MLGWorks.DevConsole.Runtime.Commands
                 ? $" (aliases: {string.Join(", ", Aliases)})"
                 : string.Empty;
 
-            string parameters = string.Join(", ", Method.GetParameters()
-                .Select(p => $"{p.ParameterType.Name} {p.Name}"));
-
             return $"{Name}{aliasText}\n  {Description}\n  {GetUsage(Name)}".Trim();
         }
 
         public string GetUsage(string name)
         {
-            string parameters = string.Join(", ", Method.GetParameters()
-                .Select(p => $"{p.ParameterType.Name} {p.Name}"));
+            string parameters = string.Join(" ", Method.GetParameters()
+                .Select(p =>
+                {
+                    string param = $"{Core.Utils.GetReadableTypeName(p.ParameterType)} {p.Name}";
+                    return p.IsOptional ? $"[{param}]" : $"<{param}>";
+                })
+            );
 
             return $"Usage: {Name} {parameters}".Trim();
         }
