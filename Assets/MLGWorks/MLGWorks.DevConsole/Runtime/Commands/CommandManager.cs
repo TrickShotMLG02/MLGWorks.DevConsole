@@ -64,6 +64,34 @@ namespace MLGWorks.DevConsole.Runtime.Commands
             _commands[key] = command;
         }
 
+        public static bool UnregisterCommand(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return false;
+
+            string key = name.ToLowerInvariant();
+
+            // Find the CommandInfo associated with this command name or alias
+            if (!_commands.TryGetValue(key, out var command))
+                return false;
+
+            // Remove all dictionary entries pointing to this CommandInfo
+            var keysToRemove = _commands
+                .Where(kvp => kvp.Value == command)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var k in keysToRemove)
+            {
+                _commands.Remove(k);
+            }
+
+            // Remove from the HashSet as well
+            _commandInfos.Remove(command);
+
+            return true;
+        }
+
         public static bool TryExecute(string input, out string result)
         {
             result = string.Empty;
@@ -196,14 +224,5 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         {
             return $"Usage: {GetCommandScheme()}".Trim();
         }
-    }
-
-    public enum CommandOutputType
-    {
-        Info,
-        Error,
-        Warning,
-        Debug,
-        CommandOutput
     }
 }
