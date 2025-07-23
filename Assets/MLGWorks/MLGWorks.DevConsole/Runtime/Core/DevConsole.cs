@@ -1,6 +1,8 @@
 ﻿using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.UI;
 using MLGWorks.Utils.Logging;
+using MLGWorks.Utils.Patterns;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using static MLGWorks.Utils.Logging.Logger;
@@ -10,48 +12,128 @@ using Logger = MLGWorks.Utils.Logging.Logger;
 namespace MLGWorks.DevConsole.Runtime.Core
 {
     /// <summary>
-    /// Main entry point for the in-game developer console.
-    /// Registers all commands and hooks into the logger to display logs in console UI.
-    /// Listens for toggle key and manages console lifecycle.
+    /// Core singleton managing console logic, input processing, command execution, and log handling.
     /// </summary>
     [RequireComponent(typeof(ConsoleUI)), DisallowMultipleComponent]
-    public class DevConsole : MonoBehaviour
+    public class DevConsole : Singleton<DevConsole>
     {
-        /// <summary>
-        /// Called on MonoBehaviour start.
-        /// Registers all commands and subscribes to logger's new log batch event.
-        /// </summary>
-        private void Start()
+        private ConsoleHistory _history;
+        private AutocompleteEngine _autocomplete;
+
+        private bool _performAutoComplete = false;
+        private CommandInfo _matchedCommand;
+        private ConsoleUI consoleUI;
+
+        protected override void Awake()
         {
+            base.Awake();
+
+            consoleUI = GetComponent<ConsoleUI>();
+            _history = new ConsoleHistory();
+            _autocomplete = new AutocompleteEngine();
+
             CommandManager.RegisterAll();
-            Logger.Instance.OnNewLogBatch += handleLogger;
+
+            Logger.Instance.OnNewLogBatch += HandleLogger;
+        }
+
+        protected override void OnDestroy()
+        {
+            if (Logger.Instance != null)
+            {
+                Logger.Instance.OnNewLogBatch -= HandleLogger;
+            }
+
+            base.OnDestroy();
+        }
+
+        private void HandleLogger(List<LogEntry> logBatch)
+        {
+            foreach (var log in logBatch)
+            {
+                consoleUI.AppendToOutput(log.Message, log.Level);
+            }
         }
 
         /// <summary>
-        /// Called on MonoBehaviour destruction.
-        /// Unsubscribes from logger event safely.
+        /// Called by UI when user submits command input
         /// </summary>
-        private void OnDestroy()
+        public void OnInputSubmit(string input)
         {
-            try
+            if (string.IsNullOrWhiteSpace(input))
+                return;
+
+            _history.Add(input);
+            SubmitCommand(input);
+        }
+
+        private void SubmitCommand(string input)
+        {
+            if (!CommandManager.TryExecute(input, out string result))
             {
-                Logger.Instance.OnNewLogBatch -= handleLogger;
+                // You may want to show command error or unknown command output
+                consoleUI.AppendToOutput(result, LogLevel.Error);
             }
-            catch { }
+            else if (!string.IsNullOrEmpty(result))
+            {
+                consoleUI.AppendToOutput(result, LogLevel.Output);
+            }
         }
 
         /// <summary>
-        /// Handles batches of log entries by appending them to the console UI output.
+        /// Get autocomplete suggestion for current input
         /// </summary>
-        /// <param name="logBatch">Batch of new log entries.</param>
-        private void handleLogger(List<LogEntry> logBatch)
+        public string GetSuggestion(string input)
         {
-            foreach (LogEntry log in logBatch)
+            var suggestion = _autocomplete.GetSuggestion(input, out var matchedCmd);
+            _matchedCommand = matchedCmd;
+            return suggestion;
+        }
+
+        /// <summary>
+        /// Request autocomplete application
+        /// </summary>
+        public void RequestAutoComplete() => _performAutoComplete = true;
+
+        /// <summary>
+        /// Apply autocomplete if requested
+        /// </summary>
+        public string PerformAutoComplete(string currentInput)
+        {
+            if (!_performAutoComplete)
+                return currentInput;
+
+            _performAutoComplete = false;
+
+            if (_matchedCommand == null)
+                return currentInput;
+
+            // If input already matches or starts with command, do nothing
+            if (currentInput.Equals(_matchedCommand.Name, StringComparison.OrdinalIgnoreCase) ||
+                currentInput.StartsWith(_matchedCommand.Name + " ", StringComparison.OrdinalIgnoreCase))
             {
-                LogLevel level = log.Level;
-                string msg = log.Message;
-                ConsoleUI.Instance?.AppendToOutput(msg, level);
+                return currentInput;
             }
+
+            return _matchedCommand.Name;
+        }
+
+        /// <summary>
+        /// Navigate backward in history, returns previous command string
+        /// </summary>
+        public string HistoryPrevious(string currentInput) => _history.Previous(currentInput);
+
+        /// <summary>
+        /// Navigate forward in history, returns next command string or original input
+        /// </summary>
+        public string HistoryNext() => _history.Next();
+
+        /// <summary>
+        /// Clear console logs via UI
+        /// </summary>
+        public void ClearLogs()
+        {
+            consoleUI.ClearLogs();
         }
     }
 }
