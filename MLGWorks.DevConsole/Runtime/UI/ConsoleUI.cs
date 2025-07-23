@@ -47,14 +47,15 @@ namespace MLGWorks.DevConsole.Runtime.UI
         public string CommandPrefix => _commandPrefix;
         [SerializeField] private int _maxLinesInBuffer = 1000;
         public bool enableSuggestions = true;
-
-        // TODO: REMOVE THIS AND MAP IT TO A KEY
-        public bool performAutoComplete = false;
+        private bool _performAutoComplete = false;
+        private CommandInfo _matchedCommand;
 
         private List<string> _logLines = new List<string>();
         private readonly Dictionary<LogLevel, Color> _levelColors = new();
         private AutocompleteEngine _autocomplete;
         private ConsoleHistory _history;
+
+        public bool IsInputFieldFocused => _inputField.isFocused;
 
         protected override void Awake()
         {
@@ -84,7 +85,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         {
             var cmd = _inputField.text;
             _history.Add(cmd);
-            GetComponent<InputHandler>().SubmitCommand(cmd);
+            SubmitCommand(cmd);
             _inputField.text = string.Empty;
             _inputField.ActivateInputField();
         }
@@ -126,38 +127,83 @@ namespace MLGWorks.DevConsole.Runtime.UI
             return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{message}</color>";
         }
 
+        public void CommandHistoryPrevious()
+        {
+            _inputField.text = _history.Previous(_inputField.text);
+            _inputField.caretPosition = _inputField.text.Length;
+        }
+
+        public void CommandHistoryNext()
+        {
+            _inputField.text = _history.Next();
+            _inputField.caretPosition = _inputField.text.Length;
+        }
+
+        private void SubmitCommand(string input)
+        {
+            string result = null;
+            CommandManager.TryExecute(input, out result);
+
+            if (result != null)
+                ConsoleUI.Instance.AppendToOutput(result, LogLevel.Output);
+        }
+
         private void Update()
         {
-            CommandInfo matchedCommand = null;
+            PerformSuggestion();
+            PerformAutoComplete();
+        }
 
-            if (enableSuggestions)
+        private void PerformSuggestion()
+        {
+            if (!enableSuggestions)
+                return;
+
+            string input = _inputField.text;
+
+            if (string.IsNullOrWhiteSpace(input))
             {
-                string input = _inputField.text;
-
-                var suggestion = _autocomplete.GetSuggestion(input, out matchedCommand);
-                if (!string.IsNullOrEmpty(suggestion) && suggestion != input)
-                {
-                    _autocompleteText.text = suggestion;
-
-                    matchedCommand = matchedCommand.Name == input ? null : matchedCommand;
-                }
-                else
-                {
-                    _autocompleteText.text = string.Empty;
-                    matchedCommand = null;
-                }
+                _autocompleteText.text = string.Empty;
+                _matchedCommand = null;
+                return;
             }
 
-            if (performAutoComplete && matchedCommand != null)
+            var suggestion = _autocomplete.GetSuggestion(input, out var matchedCommand);
+            if (!string.IsNullOrEmpty(suggestion) && suggestion != input)
             {
-                performAutoComplete = false;
-                _inputField.text = matchedCommand.Name;
-
-                // move cursor to the end of the auto-completed text
-                _inputField.caretPosition = _inputField.text.Length;
-                _inputField.selectionAnchorPosition = _inputField.text.Length;
-                _inputField.selectionFocusPosition = _inputField.text.Length;
+                _autocompleteText.text = suggestion;
+                _matchedCommand = matchedCommand.Name == input ? null : matchedCommand;
             }
+            else
+            {
+                _autocompleteText.text = string.Empty;
+                _matchedCommand = null;
+            }
+        }
+
+        public void RequestAutoComplete()
+        {
+            _performAutoComplete = true;
+        }
+
+        private void PerformAutoComplete()
+        {
+            if (!_performAutoComplete)
+                return;
+
+            if (_matchedCommand == null)
+            {
+                _performAutoComplete = false;
+                return;
+            }
+
+            _performAutoComplete = false;
+            _inputField.text = _matchedCommand.Name;
+
+            // Move caret to the end
+            _inputField.caretPosition = _inputField.text.Length;
+            _inputField.selectionAnchorPosition = _inputField.text.Length;
+            _inputField.selectionFocusPosition = _inputField.text.Length;
         }
     }
 }
