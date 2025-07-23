@@ -23,7 +23,19 @@ namespace MLGWorks.DevConsole.Runtime.Commands
             _commands.Clear();
             _commandInfos.Clear();
 
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+            .OrderBy(a =>
+            {
+                string name = a.GetName().Name;
+
+                // prioritize custom commands before built-in commands
+                if (name.StartsWith("Unity") || name.StartsWith("UnityEngine") || name.StartsWith("UnityEditor"))
+                    return 20;   // last group
+                else if (name.StartsWith("MLGWorks"))
+                    return 19;   // 2nd last group
+                else
+                    return 0;   // first group
+            });
 
             foreach (var assembly in assemblies)
             {
@@ -40,7 +52,8 @@ namespace MLGWorks.DevConsole.Runtime.Commands
 
                         // Register primary name
                         RegisterCommand(attr.Name, command);
-                        _commandInfos.Add(command);
+                        if (!_commandInfos.Contains(command))
+                            _commandInfos.Add(command);
 
                         // Register aliases
                         foreach (var alias in attr.Aliases)
