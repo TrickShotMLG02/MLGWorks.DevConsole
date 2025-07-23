@@ -37,6 +37,12 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
             return sb.ToString().TrimEnd();
         }
 
+        [Command("close", "Closes the Console Window", "hide", "exit")]
+        public static void CloseConsole()
+        {
+            Core.DevConsole.Instance.ConsoleUI.ToggleVisibility();
+        }
+
         [Command("time", "Displays the current system time")]
         public static string Time()
         {
