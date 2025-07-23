@@ -89,6 +89,10 @@ namespace MLGWorks.DevConsole.Runtime.UI
         public void OnInputSubmit()
         {
             var cmd = _inputField.text;
+
+            if (cmd == "")
+                return;
+
             _history.Add(cmd);
             SubmitCommand(cmd);
             _inputField.text = string.Empty;
