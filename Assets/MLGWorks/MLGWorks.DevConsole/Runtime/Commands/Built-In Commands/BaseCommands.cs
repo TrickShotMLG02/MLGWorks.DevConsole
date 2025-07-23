@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text;
 using UnityEngine;
 using MLGWorks.DevConsole.Runtime.UI;
 using Logger = MLGWorks.Utils.Logging.Logger;
@@ -11,12 +12,12 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         [Command("help", "Displays all available commands and their usage", "?", "h")]
         public static string Help()
         {
-            string result = "";
+            var sb = new StringBuilder();
             foreach (var cmd in CommandManager.CommandInfos)
             {
-                result += $"{cmd.GetHelp()}\n";
+                sb.AppendLine(cmd.GetHelp());
             }
-            return result.TrimEnd();
+            return sb.ToString().TrimEnd();
         }
 
         [Command("clear", "Clears console output", "cls")]
@@ -28,12 +29,12 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         [Command("commands", "Displays all available commands without their usage", "cmds")]
         public static string Commands()
         {
-            string result = "";
+            var sb = new StringBuilder();
             foreach (var cmd in CommandManager.CommandInfos)
             {
-                result += $"{cmd.GetCommandScheme()}\n";
+                sb.AppendLine(cmd.GetCommandScheme());
             }
-            return result.TrimEnd();
+            return sb.ToString().TrimEnd();
         }
 
         [Command("time", "Displays the current system time")]
@@ -46,6 +47,9 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         public static string Uptime()
         {
             TimeSpan uptime = TimeSpan.FromSeconds(UnityEngine.Time.realtimeSinceStartup);
+            // Format includes days if any
+            if (uptime.Days > 0)
+                return $"Uptime: {uptime.Days}d {uptime:hh\\:mm\\:ss}";
             return $"Uptime: {uptime:hh\\:mm\\:ss}";
         }
 
@@ -71,12 +75,18 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
             string path = Logger.Instance.LogDirectory;
             try
             {
-#if UNITY_EDITOR || UNITY_STANDALONE
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = path,
                     UseShellExecute = true
                 });
+                return $"Opened log folder: {path}";
+#elif UNITY_STANDALONE_OSX
+                Process.Start("open", path);
+                return $"Opened log folder: {path}";
+#elif UNITY_STANDALONE_LINUX
+                Process.Start("xdg-open", path);
                 return $"Opened log folder: {path}";
 #else
                 return $"Log folder path: {path}";

@@ -5,8 +5,18 @@ using System.Reflection;
 
 namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
 {
+    /// <summary>
+    /// Commands for invoking arbitrary methods via console.
+    /// </summary>
     public static class ExecutionCommands
     {
+        /// <summary>
+        /// Invokes a static or instance method on a class with string arguments.
+        /// Usage: invoke ClassName.MethodName arg1 arg2 ...
+        /// </summary>
+        /// <param name="fullMethodName">Full method name including class (e.g. "MyNamespace.MyClass.MyMethod")</param>
+        /// <param name="args">Arguments as strings</param>
+        /// <returns>Result of method call or error message</returns>
         [Command("invoke", "Invokes a static or instance method on a class with string args", "exec")]
         public static string Invoke(string fullMethodName, string[] args = null)
         {
@@ -26,7 +36,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
 
             object target = null;
 
-            // Get all methods with the given name (ignore case maybe?)
+            // Find all methods matching the name (case-insensitive)
             var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance)
                 .Where(m => string.Equals(m.Name, methodName, StringComparison.OrdinalIgnoreCase))
                 .ToArray();
@@ -37,22 +47,22 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
             MethodInfo matchedMethod = null;
             object[] convertedParameters = null;
 
-            // Try to find a method overload matching args count & convertible args
+            // Attempt to find a suitable method overload by converting args
             foreach (var method in methods)
             {
                 var parameters = method.GetParameters();
 
-                // If args count is less than parameter count, skip (cannot invoke)
+                // Require enough args to cover parameters
                 if (args.Length < parameters.Length)
                     continue;
 
                 object[] converted = new object[parameters.Length];
                 bool convertible = true;
 
-                // If last parameter is string and args are enough or more, do special conversion
+                // Special case: if last parameter is string, join remaining args for it
                 if (parameters.Length > 0 && parameters.Last().ParameterType == typeof(string))
                 {
-                    // Convert all but last parameter individually
+                    // Convert all parameters except last individually
                     for (int i = 0; i < parameters.Length - 1; i++)
                     {
                         if (i >= args.Length)
@@ -60,12 +70,9 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
                             convertible = false;
                             break;
                         }
-
                         try
                         {
-                            string[] tmpArr = new string[1];
-                            tmpArr[0] = args[i];
-                            converted[i] = ReflectionUtils.ParseValue(parameters[i].ParameterType, tmpArr);
+                            converted[i] = ReflectionUtils.ParseValue(parameters[i].ParameterType, new[] { args[i] });
                         }
                         catch
                         {
@@ -73,17 +80,16 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
                             break;
                         }
                     }
-
                     if (!convertible)
                         continue;
 
-                    // Join all remaining args for last string parameter
+                    // Join remaining args for last string parameter
                     string joinedLast = string.Join(" ", args.Skip(parameters.Length - 1));
                     converted[parameters.Length - 1] = joinedLast;
                 }
                 else
                 {
-                    // Otherwise, exact match required
+                    // Exact argument count match required
                     if (parameters.Length != args.Length)
                         continue;
 
@@ -91,9 +97,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
                     {
                         try
                         {
-                            string[] tmpArr = new string[1];
-                            tmpArr[0] = args[i];
-                            converted[i] = ReflectionUtils.ParseValue(parameters[i].ParameterType, tmpArr);
+                            converted[i] = ReflectionUtils.ParseValue(parameters[i].ParameterType, new[] { args[i] });
                         }
                         catch
                         {
@@ -101,7 +105,6 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
                             break;
                         }
                     }
-
                     if (!convertible)
                         continue;
                 }
@@ -114,7 +117,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
             if (matchedMethod == null)
                 return $"No suitable overload for method '{methodName}' with {args.Length} parameters found.";
 
-            // If instance method, try to get the instance via Instance property as in your pattern
+            // For instance methods, find singleton Instance property to get target instance
             if (!matchedMethod.IsStatic)
             {
                 PropertyInfo instanceProperty = null;
