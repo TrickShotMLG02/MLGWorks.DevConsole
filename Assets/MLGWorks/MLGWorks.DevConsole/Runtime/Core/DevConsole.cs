@@ -17,11 +17,6 @@ namespace MLGWorks.DevConsole.Runtime.Core
     [RequireComponent(typeof(ConsoleUI)), DisallowMultipleComponent]
     public class DevConsole : MonoBehaviour
     {
-        [Tooltip("Key to toggle the console UI")]
-        public KeyCode toggleKey = KeyCode.P;
-
-        public bool ToggleUI = false;
-
         private void Start()
         {
             CommandManager.RegisterAll();
@@ -49,17 +44,6 @@ namespace MLGWorks.DevConsole.Runtime.Core
 
         private void Update()
         {
-            if (ToggleUI)
-            {
-                ToggleUI = false;
-                ConsoleUI.Instance.ToggleVisibility();
-            }
-            return;
-
-            if (Input.GetKeyDown(toggleKey))
-            {
-                ConsoleUI.Instance.ToggleVisibility();
-            }
         }
     }
 }

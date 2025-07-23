@@ -33,5 +33,15 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         {
             return (a + b).ToString();
         }
+
+        public static string Get()
+        {
+            return null;
+        }
+
+        public static string Set()
+        {
+            return null;
+        }
     }
 }

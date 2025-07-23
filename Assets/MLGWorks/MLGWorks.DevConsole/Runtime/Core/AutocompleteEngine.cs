@@ -82,7 +82,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
                     typeName = $"{Utils.GetReadableTypeName(param.ParameterType.GetElementType())}[]";
 
                 sb.Append(" ");
-                sb.Append(param.IsOptional ? $"[{typeName}]" : $"<{typeName}>");
+                sb.Append(param.IsOptional ? $"[{param.Name}: {typeName}]" : $"<{param.Name}: {typeName}>");
             }
 
             return sb.ToString();
