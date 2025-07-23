@@ -13,6 +13,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
     public class AutocompleteEngine
     {
         private CommandInfo _matchedCommand;
+        private string _matchedAlias;
         private bool _performAutoComplete;
 
         /// <summary>
@@ -48,6 +49,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             var matchedAlias = matchKVP.Key;
             var match = matchKVP.Value;
 
+            _matchedAlias = matchedAlias;
             matchedCommand = match;
 
             if (match == null)
@@ -120,19 +122,19 @@ namespace MLGWorks.DevConsole.Runtime.Core
 
             _performAutoComplete = false;
 
-            if (_matchedCommand == null)
+            if (_matchedCommand == null || string.IsNullOrWhiteSpace(_matchedAlias))
                 return null;
 
             string input = currentInput.TrimStart();
 
-            // If input already exactly matches or starts with the command, do nothing
-            if (input.Equals(_matchedCommand.Name, StringComparison.OrdinalIgnoreCase) ||
-                input.StartsWith(_matchedCommand.Name + " ", StringComparison.OrdinalIgnoreCase))
+            // If input already exactly matches or starts with the matched alias, do nothing
+            if (input.Equals(_matchedAlias, StringComparison.OrdinalIgnoreCase) ||
+                input.StartsWith(_matchedAlias + " ", StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }
 
-            return _matchedCommand.Name;
+            return _matchedAlias;
         }
 
         /// <summary>
