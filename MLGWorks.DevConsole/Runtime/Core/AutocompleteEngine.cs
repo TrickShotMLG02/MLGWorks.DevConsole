@@ -38,7 +38,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             matchedCommand = match;
 
             if (match == null)
-                return input; // no match, just return input
+                return string.Empty; // no match, just return input
 
             var method = match.Method;
             var parameters = method.GetParameters();

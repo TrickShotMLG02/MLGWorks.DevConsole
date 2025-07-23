@@ -49,11 +49,14 @@ namespace MLGWorks.DevConsole.Runtime.UI
         public bool enableSuggestions = true;
         private bool _performAutoComplete = false;
         private CommandInfo _matchedCommand;
+        [SerializeField] private Color _invalidCommandColor = new Color(0.8235f, 0.0157f, 0.1765f); // #D2042D
 
         private List<string> _logLines = new List<string>();
         private readonly Dictionary<LogLevel, Color> _levelColors = new();
         private AutocompleteEngine _autocomplete;
         private ConsoleHistory _history;
+
+        private Color _originalInputFieldColor;
 
         public bool IsInputFieldFocused => _inputField.isFocused;
 
@@ -72,6 +75,8 @@ namespace MLGWorks.DevConsole.Runtime.UI
             _levelColors[LogLevel.Error] = _errorColor;
             _levelColors[LogLevel.Command] = _commandColor;
             _levelColors[LogLevel.Output] = _outputColor;
+
+            _originalInputFieldColor = _inputField.textComponent.color;
         }
 
         public void ToggleVisibility()
@@ -156,6 +161,9 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
         private void PerformSuggestion()
         {
+            if (_inputField.textComponent.color != _originalInputFieldColor)
+                _inputField.textComponent.color = _originalInputFieldColor;
+
             if (!enableSuggestions)
                 return;
 
@@ -178,6 +186,9 @@ namespace MLGWorks.DevConsole.Runtime.UI
             {
                 _autocompleteText.text = string.Empty;
                 _matchedCommand = null;
+
+                if (suggestion != input)
+                    _inputField.textComponent.color = _invalidCommandColor;
             }
         }
 
@@ -191,13 +202,20 @@ namespace MLGWorks.DevConsole.Runtime.UI
             if (!_performAutoComplete)
                 return;
 
+            _performAutoComplete = false;
+
             if (_matchedCommand == null)
+                return;
+
+            string input = _inputField.text.TrimStart();
+
+            // If input is exactly the command name or starts with it and a space, don't overwrite
+            if (input.Equals(_matchedCommand.Name, System.StringComparison.OrdinalIgnoreCase) ||
+                input.StartsWith(_matchedCommand.Name + " ", System.StringComparison.OrdinalIgnoreCase))
             {
-                _performAutoComplete = false;
                 return;
             }
 
-            _performAutoComplete = false;
             _inputField.text = _matchedCommand.Name;
 
             // Move caret to the end
