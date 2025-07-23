@@ -7,7 +7,6 @@ namespace MLGWorks.DevConsole.Runtime.Core
     /// <summary>
     /// Keeps a history of entered commands for navigation.
     /// </summary>
-    [Serializable]
     public class ConsoleHistory
     {
         private readonly List<string> _history = new List<string>();
