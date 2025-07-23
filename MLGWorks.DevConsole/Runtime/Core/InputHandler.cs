@@ -1,7 +1,4 @@
-using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.UI;
-using MLGWorks.Utils.Logging;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +9,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
 {
     /// <summary>
     /// Captures and processes input from the console input field.
+    /// Manages input bindings and disables conflicting UI keys.
     /// </summary>
     [DisallowMultipleComponent]
     public class InputHandler : MonoBehaviour
@@ -19,12 +17,18 @@ namespace MLGWorks.DevConsole.Runtime.Core
         private DevConsoleInputActions _input;
         private List<KeyCode?> _disabledKeys = new();
 
+        /// <summary>
+        /// Initializes input actions and disables conflicting UI keys.
+        /// </summary>
         private void Awake()
         {
             _input = new DevConsoleInputActions();
             DisableUIKeys();
         }
 
+        /// <summary>
+        /// Populates the list of keys for which default UI events should be disabled.
+        /// </summary>
         private void DisableUIKeys()
         {
             _disabledKeys.Clear();
@@ -32,6 +36,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
             _disabledKeys.Add(GetKeyCodeForAction(_input.DevConsole.CommandHistoryNext));
         }
 
+        /// <summary>
+        /// Subscribes to input events and enables input actions.
+        /// </summary>
         private void OnEnable()
         {
             _input.DevConsole.ToggleConsole.performed += OnToggleConsole;
@@ -42,6 +49,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
             _input.Enable();
         }
 
+        /// <summary>
+        /// Unsubscribes from input events and disables input actions.
+        /// </summary>
         private void OnDisable()
         {
             _input.DevConsole.ToggleConsole.performed -= OnToggleConsole;
@@ -52,6 +62,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
             _input.Disable();
         }
 
+        /// <summary>
+        /// Attempts to find the first keyboard KeyCode bound to a given input action.
+        /// </summary>
+        /// <param name="action">Input action to examine.</param>
+        /// <returns>The KeyCode if found; otherwise null.</returns>
         private KeyCode? GetKeyCodeForAction(InputAction action)
         {
             // Find first binding on keyboard device
@@ -67,7 +82,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
 
                         foreach (KeyCode key in Enum.GetValues(typeof(KeyCode)))
                         {
-                            if (key.ToString().ToUpper() == keyName.ToUpper())
+                            if (key.ToString().Equals(keyName, StringComparison.OrdinalIgnoreCase))
                                 return key;
                         }
                     }
@@ -76,7 +91,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
             return null; // no keyboard binding found or failed to parse
         }
 
-        // Disable default UI Events for given keys
+        /// <summary>
+        /// Disables Unity UI events for certain keys to avoid conflicts with the console.
+        /// </summary>
         public void OnGUI()
         {
             if (Event.current.isKey)
@@ -86,6 +103,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
             }
         }
 
+        /// <summary>
+        /// Handles toggling the console UI visibility.
+        /// Does nothing if input field is focused to avoid accidental toggling.
+        /// </summary>
+        /// <param name="context">Input callback context.</param>
         private void OnToggleConsole(InputAction.CallbackContext context)
         {
             if (ConsoleUI.Instance.IsInputFieldFocused)
@@ -94,21 +116,37 @@ namespace MLGWorks.DevConsole.Runtime.Core
             ConsoleUI.Instance.ToggleVisibility();
         }
 
+        /// <summary>
+        /// Submits the current input in the console UI.
+        /// </summary>
+        /// <param name="context">Input callback context.</param>
         private void OnSubmitCommand(InputAction.CallbackContext context)
         {
             ConsoleUI.Instance.OnInputSubmit();
         }
 
+        /// <summary>
+        /// Requests autocomplete from the console UI.
+        /// </summary>
+        /// <param name="context">Input callback context.</param>
         private void OnAutoComplete(InputAction.CallbackContext context)
         {
             ConsoleUI.Instance.RequestAutoComplete();
         }
 
+        /// <summary>
+        /// Navigates to the previous command in history.
+        /// </summary>
+        /// <param name="context">Input callback context.</param>
         private void OnCommandHistoryPrevious(InputAction.CallbackContext context)
         {
             ConsoleUI.Instance.CommandHistoryPrevious();
         }
 
+        /// <summary>
+        /// Navigates to the next command in history.
+        /// </summary>
+        /// <param name="context">Input callback context.</param>
         private void OnCommandHistoryNext(InputAction.CallbackContext context)
         {
             ConsoleUI.Instance.CommandHistoryNext();

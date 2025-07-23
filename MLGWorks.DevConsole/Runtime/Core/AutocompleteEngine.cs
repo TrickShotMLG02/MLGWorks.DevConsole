@@ -1,17 +1,21 @@
 using MLGWorks.DevConsole.Runtime.Commands;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace MLGWorks.DevConsole.Runtime.Core
 {
     /// <summary>
-    /// Provides autocomplete suggestion including typed part and missing remainder.
+    /// Provides autocomplete suggestions for console commands.
+    /// Suggests the full command including typed parts and the missing remainder.
     /// </summary>
     public class AutocompleteEngine
     {
+        /// <summary>
+        /// Gets an autocomplete suggestion for the given input.
+        /// </summary>
+        /// <param name="input">Partial input typed by the user.</param>
+        /// <returns>Suggested full command string including typed and missing parts.</returns>
         public string GetSuggestion(string input)
         {
             CommandInfo cmd = null;
@@ -19,8 +23,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
         }
 
         /// <summary>
-        /// Returns full suggestion text including typed parts, and missing parts.
+        /// Gets an autocomplete suggestion and the matched command info for the given input.
         /// </summary>
+        /// <param name="input">Partial input typed by the user.</param>
+        /// <param name="matchedCommand">Outputs the matched <see cref="CommandInfo"/> if found; otherwise null.</param>
+        /// <returns>Suggested full command string including typed and missing parts.</returns>
         public string GetSuggestion(string input, out CommandInfo matchedCommand)
         {
             matchedCommand = null;
@@ -32,7 +39,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             string typedCommand = tokens[0];
             string[] typedArgs = tokens.Skip(1).ToArray();
 
-            // Find matching command by prefix
+            // Find matching command by prefix, case-insensitive
             var matchKVP = CommandManager.Commands
                 .FirstOrDefault(pair => pair.Key.StartsWith(typedCommand, StringComparison.OrdinalIgnoreCase));
 
@@ -42,7 +49,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             matchedCommand = match;
 
             if (match == null)
-                return string.Empty; // no match, just return input
+                return string.Empty; // No match found, return empty suggestion
 
             var method = match.Method;
             var parameters = method.GetParameters();
@@ -64,19 +71,19 @@ namespace MLGWorks.DevConsole.Runtime.Core
             int typedCount = typedArgs.Length;
             int paramCount = parameters.Length;
 
+            // Special case: if method has a single params string[] parameter
             if (parameters.Length == 1 &&
                 Attribute.IsDefined(parameters[0], typeof(ParamArrayAttribute)))
             {
-                // Special case: params string[]
                 if (typedCount == 0)
                 {
                     sb.Append(" <string[]>");
                 }
-                // If user already typed args, no need to suggest further parameters
+                // If user already typed args, no further suggestions needed
                 return sb.ToString();
             }
 
-            // Append missing parameters (those not typed yet)
+            // Append missing parameters as placeholders, showing optionality and type
             for (int i = typedCount; i < paramCount; i++)
             {
                 var param = parameters[i];

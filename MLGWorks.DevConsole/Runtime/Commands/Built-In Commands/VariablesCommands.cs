@@ -4,8 +4,18 @@ using System.Reflection;
 
 namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
 {
+    /// <summary>
+    /// Provides built-in console commands to get or set static or instance variables/properties by reflection.
+    /// </summary>
     public static class GetCommand
     {
+        /// <summary>
+        /// Gets the value of a variable or property of a given class.
+        /// </summary>
+        /// <param name="className">The name of the class containing the variable/property.</param>
+        /// <param name="variableName">The name of the variable or property to get.</param>
+        /// <param name="args">Optional arguments (not used here, but accepted for command signature compatibility).</param>
+        /// <returns>A string describing the current value or an error message if not found.</returns>
         [Command("get", "Gets the value of a variable of a given class")]
         public static string Get(string className, string variableName, string[] args = default)
         {
@@ -30,12 +40,19 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
             return $"{className}.{variableName} = {value}";
         }
 
+        /// <summary>
+        /// Sets the value of a variable or property of a given class.
+        /// </summary>
+        /// <param name="className">The name of the class containing the variable/property.</param>
+        /// <param name="variableName">The name of the variable or property to set.</param>
+        /// <param name="args">The value(s) to assign, parsed to the correct type.</param>
+        /// <returns>A string describing the change or an error message if the operation failed.</returns>
         [Command("set", "Sets the value of a variable of a given class to a specific value")]
         public static string Set(string className, string variableName, string[] args)
         {
             if (args.Length < 1)
             {
-                return $"Usage: set<ClassName> < VariableName > < Value >";
+                return $"Usage: set <ClassName> <VariableName> <Value>";
             }
 
             Type type = ReflectionUtils.FindType(className);
@@ -69,6 +86,10 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
                 {
                     oldValue = property.GetValue(target);
                     property.SetValue(target, parsedValue);
+                }
+                else
+                {
+                    return $"Property '{variableName}' is read-only.";
                 }
 
                 return $"set {className}.{variableName} {oldValue} => {parsedValue}";

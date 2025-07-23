@@ -5,7 +5,8 @@ using UnityEngine;
 namespace MLGWorks.DevConsole.Runtime.Core
 {
     /// <summary>
-    /// Keeps a history of entered commands for navigation.
+    /// Maintains a history of entered console commands and allows navigation
+    /// through previous and next commands, preserving temporary unsaved input.
     /// </summary>
     public class ConsoleHistory
     {
@@ -15,6 +16,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
         private string _temporaryInput = string.Empty;
         private bool _savedTemporaryInput = false;
 
+        /// <summary>
+        /// Adds a new command to the history if it's not a duplicate of the last entry.
+        /// Resets the navigation index.
+        /// </summary>
+        /// <param name="command">The command string to add.</param>
         public void Add(string command)
         {
             if (_history.Count == 0 || _history[_history.Count - 1] != command)
@@ -25,6 +31,12 @@ namespace MLGWorks.DevConsole.Runtime.Core
             _index = _history.Count;
         }
 
+        /// <summary>
+        /// Navigates to the previous command in history.
+        /// Saves the current input before navigating.
+        /// </summary>
+        /// <param name="currentInput">The current text input before navigation.</param>
+        /// <returns>The previous command from history or empty if none.</returns>
         public string Previous(string currentInput)
         {
             if (_history.Count == 0) return string.Empty;
@@ -36,6 +48,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
             return _history[_index];
         }
 
+        /// <summary>
+        /// Navigates to the next command in history or restores temporary input
+        /// if at the end of history.
+        /// </summary>
+        /// <returns>The next command or the restored temporary input.</returns>
         public string Next()
         {
             if (_history.Count == 0) return _temporaryInput;
@@ -52,6 +69,10 @@ namespace MLGWorks.DevConsole.Runtime.Core
             return _history[_index];
         }
 
+        /// <summary>
+        /// Saves the current input text temporarily to restore it when navigating back.
+        /// </summary>
+        /// <param name="input">Current input to save.</param>
         public void SaveCurrentInput(string input)
         {
             if (!_savedTemporaryInput)
@@ -61,6 +82,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
             }
         }
 
+        /// <summary>
+        /// Resets the history navigation index and clears temporary saved input.
+        /// </summary>
         private void ResetIndex()
         {
             _index = _history.Count;
