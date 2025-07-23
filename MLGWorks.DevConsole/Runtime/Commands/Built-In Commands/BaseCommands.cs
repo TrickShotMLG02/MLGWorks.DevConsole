@@ -23,7 +23,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         [Command("clear", "Clears console output", "cls")]
         public static void Clear()
         {
-            ConsoleUI.Instance.ClearLogs();
+            Core.DevConsole.Instance.ConsoleUI.ClearLogs();
         }
 
         [Command("commands", "Displays all available commands without their usage", "cmds")]

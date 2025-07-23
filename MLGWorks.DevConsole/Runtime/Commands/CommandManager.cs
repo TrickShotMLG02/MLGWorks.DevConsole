@@ -134,7 +134,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands
             if (string.IsNullOrWhiteSpace(input)) return false;
 
             // Print entered command to console output as a command log
-            ConsoleUI.Instance.AppendToOutput($"> {input}", LogLevel.Command);
+            Core.DevConsole.Instance.ConsoleUI.AppendToOutput($"> {input}", LogLevel.Command);
 
             var parts = input.Split(' ');
             var commandName = parts[0].ToLower();

@@ -8,13 +8,18 @@ namespace MLGWorks.DevConsole.Runtime.Core
     /// <summary>
     /// Provides autocomplete suggestions for console commands.
     /// Suggests the full command including typed parts and the missing remainder.
+    /// Also manages applying autocomplete.
     /// </summary>
     public class AutocompleteEngine
     {
+        private CommandInfo _matchedCommand;
+        private bool _performAutoComplete;
+
         /// <summary>
         /// Gets an autocomplete suggestion for the given input.
         /// </summary>
         /// <param name="input">Partial input typed by the user.</param>
+        /// <param name="matchedCommand">Outputs the matched <see cref="CommandInfo"/> if found; otherwise null.</param>
         /// <returns>Suggested full command string including typed and missing parts.</returns>
         public string GetSuggestion(string input)
         {
@@ -25,9 +30,6 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <summary>
         /// Gets an autocomplete suggestion and the matched command info for the given input.
         /// </summary>
-        /// <param name="input">Partial input typed by the user.</param>
-        /// <param name="matchedCommand">Outputs the matched <see cref="CommandInfo"/> if found; otherwise null.</param>
-        /// <returns>Suggested full command string including typed and missing parts.</returns>
         public string GetSuggestion(string input, out CommandInfo matchedCommand)
         {
             matchedCommand = null;
@@ -97,6 +99,48 @@ namespace MLGWorks.DevConsole.Runtime.Core
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Requests autocomplete to be performed on next update.
+        /// </summary>
+        public void RequestAutoComplete()
+        {
+            _performAutoComplete = true;
+        }
+
+        /// <summary>
+        /// Tries to perform autocomplete based on current input.
+        /// Returns new input string if autocomplete applied, otherwise null.
+        /// </summary>
+        public string TryPerformAutoComplete(string currentInput)
+        {
+            if (!_performAutoComplete)
+                return null;
+
+            _performAutoComplete = false;
+
+            if (_matchedCommand == null)
+                return null;
+
+            string input = currentInput.TrimStart();
+
+            // If input already exactly matches or starts with the command, do nothing
+            if (input.Equals(_matchedCommand.Name, StringComparison.OrdinalIgnoreCase) ||
+                input.StartsWith(_matchedCommand.Name + " ", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return _matchedCommand.Name;
+        }
+
+        /// <summary>
+        /// Sets the matched command for future autocomplete application.
+        /// </summary>
+        public void SetMatchedCommand(CommandInfo matchedCommand)
+        {
+            _matchedCommand = matchedCommand;
         }
     }
 }
