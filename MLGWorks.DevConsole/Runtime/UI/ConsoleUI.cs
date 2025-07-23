@@ -7,35 +7,22 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = MLGWorks.Utils.Logging.Logger;
 
 namespace MLGWorks.DevConsole.Runtime.UI
 {
-    /// <summary>
-    /// Struct representing a mapping between a <see cref="LogLevel"/> and a <see cref="Color"/>.
-    /// </summary>
     [Serializable]
     public struct LogLevelColor
     {
-        /// <summary>
-        /// The optional log level this color is associated with.
-        /// </summary>
         public LogLevel? Level;
-
-        /// <summary>
-        /// The color to use for the log level.
-        /// </summary>
         public Color Color;
 
-        /// <summary>
-        /// Returns the color as a hex string in RGB format, suitable for Unity rich text.
-        /// </summary>
-        /// <returns>Hex string representing the color.</returns>
         public string GetHex() => ColorUtility.ToHtmlStringRGB(Color);
     }
 
     /// <summary>
-    /// Singleton responsible for managing the developer console UI, including input handling,
-    /// displaying logs with color coding, command history, autocomplete, and toggling visibility.
+    /// Singleton managing the console UI display and input.
+    /// Uses ScrollbackBuffer to limit displayed log lines.
     /// </summary>
     [RequireComponent(typeof(InputHandler)), DisallowMultipleComponent]
     public class ConsoleUI : Singleton<ConsoleUI>
@@ -57,49 +44,44 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
         [Header("Console Settings")]
         [SerializeField] private string _commandPrefix = "> ";
-
-        /// <summary>
-        /// Prefix used before user commands in the console UI.
-        /// </summary>
         public string CommandPrefix => _commandPrefix;
-
         [SerializeField] private int _maxLinesInBuffer = 1000;
-
-        /// <summary>
-        /// Enables or disables command suggestions/autocomplete.
-        /// </summary>
         public bool enableSuggestions = true;
-
         private bool _performAutoComplete = false;
         private CommandInfo _matchedCommand;
-
         [SerializeField] private Color _invalidCommandColor = new Color(0.8235f, 0.0157f, 0.1765f); // #D2042D
 
-        private List<string> _logLines = new List<string>();
+        // ScrollbackBuffer replaces the previous List<string> buffer for managing log lines
+        private ScrollbackBuffer _logBuffer;
+
+        // Dictionary for quick lookup of log level colors
         private readonly Dictionary<LogLevel, Color> _levelColors = new();
+
         private AutocompleteEngine _autocomplete;
         private ConsoleHistory _history;
 
         private Color _originalInputFieldColor;
 
-        /// <summary>
-        /// Returns whether the input field currently has keyboard focus.
-        /// </summary>
         public bool IsInputFieldFocused => _inputField.isFocused;
 
         /// <summary>
-        /// Initializes the singleton and related state on awake.
-        /// Sets up color mappings and initializes history and autocomplete systems.
+        /// Initializes the console, disables it by default, and sets up necessary components.
         /// </summary>
         protected override void Awake()
         {
             base.Awake();
 
+            // Disable console UI on start
             _consoleCanvas.gameObject.SetActive(false);
+
+            // Initialize autocomplete engine and command history
             _autocomplete = new AutocompleteEngine();
             _history = new ConsoleHistory();
 
-            // Initialize color dictionary for each log level
+            // Initialize the ScrollbackBuffer with max lines
+            _logBuffer = new ScrollbackBuffer(_maxLinesInBuffer);
+
+            // Setup the color dictionary for log levels
             _levelColors[LogLevel.Debug] = _debugColor;
             _levelColors[LogLevel.Info] = _infoColor;
             _levelColors[LogLevel.Warning] = _warningColor;
@@ -111,8 +93,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Toggles the visibility of the console UI.
-        /// When shown, focuses the input field for user commands.
+        /// Toggles the console visibility on/off.
         /// </summary>
         public void ToggleVisibility()
         {
@@ -122,14 +103,13 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Called when the user submits a command input.
-        /// Adds command to history, executes it, and resets input field.
+        /// Handles input submission: add to history, process command, reset input.
         /// </summary>
         public void OnInputSubmit()
         {
             var cmd = _inputField.text;
 
-            if (cmd == "")
+            if (string.IsNullOrEmpty(cmd))
                 return;
 
             _history.Add(cmd);
@@ -139,41 +119,47 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Appends a formatted message to the console output area with optional color coding by log level.
+        /// Appends a new line to the output text using ScrollbackBuffer to limit lines.
         /// </summary>
-        /// <param name="message">The message to append.</param>
-        /// <param name="level">Optional log level for color coding.</param>
+        /// <param name="message">The log or command message.</param>
+        /// <param name="level">Optional log level to determine color.</param>
         public void AppendToOutput(string message, LogLevel? level = null)
         {
-            string msg = FormatMessage(level, message);
-            _logLines.Add(msg);
-            if (_logLines.Count > _maxLinesInBuffer)
+            // Split the message by line breaks to handle multiline messages
+            var lines = message.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+
+            // Format each line with the log level color
+            for (int i = 0; i < lines.Length; i++)
             {
-                _logLines.RemoveAt(0); // remove oldest line to maintain buffer size
+                lines[i] = FormatMessage(level, lines[i]);
             }
 
-            _outputText.text = string.Join("\n", _logLines);
+            // Rejoin the formatted lines with line breaks
+            string formattedMessage = string.Join("\n", lines);
 
-            // Force layout update and scroll to bottom
+            // Add message to the scrollback buffer (auto trims if over limit)
+            _logBuffer.Add(formattedMessage);
+
+            // Join all buffered lines and display
+            _outputText.text = string.Join("\n", _logBuffer.GetLines());
+
+            // Force UI update and scroll to bottom
             Canvas.ForceUpdateCanvases();
             _scrollRect.verticalNormalizedPosition = 0f;
         }
 
         /// <summary>
-        /// Clears all console output lines.
+        /// Clears the console output and resets the scrollback buffer.
         /// </summary>
         public void ClearLogs()
         {
+            _logBuffer = new ScrollbackBuffer(_maxLinesInBuffer);
             _outputText.text = "";
-            _logLines.Clear();
         }
 
         /// <summary>
-        /// Formats a log message with the color corresponding to the given log level.
+        /// Formats the message text with color tags based on log level.
         /// </summary>
-        /// <param name="level">Log level to determine color.</param>
-        /// <param name="message">Message text.</param>
-        /// <returns>Colored message string in Unity rich text format.</returns>
         private string FormatMessage(LogLevel? level, string message)
         {
             Color color = level switch
@@ -191,7 +177,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Replaces the input field text with the previous command from history and moves the caret to the end.
+        /// Navigates back in command history and updates the input field.
         /// </summary>
         public void CommandHistoryPrevious()
         {
@@ -200,7 +186,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Replaces the input field text with the next command from history and moves the caret to the end.
+        /// Navigates forward in command history and updates the input field.
         /// </summary>
         public void CommandHistoryNext()
         {
@@ -209,20 +195,19 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Executes the given command string through the CommandManager and appends the result to the output.
+        /// Executes the command string and appends output if any.
         /// </summary>
-        /// <param name="input">Command string to execute.</param>
         private void SubmitCommand(string input)
         {
             string result = null;
             CommandManager.TryExecute(input, out result);
 
-            if (result != null)
+            if (!string.IsNullOrEmpty(result))
                 ConsoleUI.Instance.AppendToOutput(result, LogLevel.Output);
         }
 
         /// <summary>
-        /// Unity update loop, performs suggestion and autocomplete processing each frame.
+        /// Called every frame to handle autocomplete suggestions and input logic.
         /// </summary>
         private void Update()
         {
@@ -231,7 +216,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Updates the autocomplete suggestion UI and highlights input if the current command is invalid.
+        /// Generates autocomplete suggestions for the current input text.
         /// </summary>
         private void PerformSuggestion()
         {
@@ -267,7 +252,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Requests the console to perform autocomplete on the current input on the next frame.
+        /// Requests autocomplete to apply on next Update.
         /// </summary>
         public void RequestAutoComplete()
         {
@@ -275,7 +260,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         }
 
         /// <summary>
-        /// Performs autocomplete by replacing the input with the matched command name if appropriate.
+        /// Applies the autocomplete text to input field if available.
         /// </summary>
         private void PerformAutoComplete()
         {
@@ -289,7 +274,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
             string input = _inputField.text.TrimStart();
 
-            // If input exactly matches command or starts with it plus a space, do not overwrite
+            // If input already exactly matches or starts with the command, do nothing
             if (input.Equals(_matchedCommand.Name, StringComparison.OrdinalIgnoreCase) ||
                 input.StartsWith(_matchedCommand.Name + " ", StringComparison.OrdinalIgnoreCase))
             {
@@ -298,7 +283,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
             _inputField.text = _matchedCommand.Name;
 
-            // Move caret to the end of the text
+            // Move caret to end of input field
             _inputField.caretPosition = _inputField.text.Length;
             _inputField.selectionAnchorPosition = _inputField.text.Length;
             _inputField.selectionFocusPosition = _inputField.text.Length;

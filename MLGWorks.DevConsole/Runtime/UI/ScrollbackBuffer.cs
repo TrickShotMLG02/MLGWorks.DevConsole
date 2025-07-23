@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace MLGWorks.DevConsole.Runtime.UI
@@ -27,9 +28,15 @@ namespace MLGWorks.DevConsole.Runtime.UI
         /// <param name="line">The line to add.</param>
         public void Add(string line)
         {
-            lines.Enqueue(line);
-            if (lines.Count > maxLines)
-                lines.Dequeue();
+            // Split on all newlines (\r\n, \n, \r)
+            var splitLines = line.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+
+            foreach (var singleLine in splitLines)
+            {
+                lines.Enqueue(singleLine);
+                if (lines.Count > maxLines)
+                    lines.Dequeue();
+            }
         }
 
         /// <summary>
