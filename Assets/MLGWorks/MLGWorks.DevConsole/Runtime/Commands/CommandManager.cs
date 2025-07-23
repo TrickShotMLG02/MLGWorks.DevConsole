@@ -89,7 +89,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands
 
                 if (args.Length < parameters.Count(p => !p.IsOptional))
                 {
-                    result = command.GetUsage(commandName);
+                    result = command.GetUsage();
                     return false;
                 }
 
@@ -177,10 +177,10 @@ namespace MLGWorks.DevConsole.Runtime.Commands
                 ? $" (aliases: {string.Join(", ", Aliases)})"
                 : string.Empty;
 
-            return $"{Name}{aliasText}\n  {Description}\n  {GetUsage(Name)}".Trim();
+            return $"{Name}{aliasText}\n  {Description}\n  {GetUsage()}".Trim();
         }
 
-        public string GetUsage(string name)
+        public string GetCommandScheme()
         {
             string parameters = string.Join(" ", Method.GetParameters()
                 .Select(p =>
@@ -189,8 +189,12 @@ namespace MLGWorks.DevConsole.Runtime.Commands
                     return p.IsOptional ? $"[{param}]" : $"<{param}>";
                 })
             );
+            return $"{Name} {parameters}".Trim();
+        }
 
-            return $"Usage: {Name} {parameters}".Trim();
+        public string GetUsage()
+        {
+            return $"Usage: {GetCommandScheme()}".Trim();
         }
     }
 
