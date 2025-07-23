@@ -1,13 +1,12 @@
 using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.Core;
+using MLGWorks.DevConsole.Runtime.Utils;
 using MLGWorks.Utils.Logging;
-using MLGWorks.Utils.Patterns;
 using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Logger = MLGWorks.Utils.Logging.Logger;
 
 namespace MLGWorks.DevConsole.Runtime.UI
 {
@@ -21,12 +20,14 @@ namespace MLGWorks.DevConsole.Runtime.UI
     }
 
     /// <summary>
-    /// Singleton managing the console UI display and input.
+    /// Manages the console UI display and input.
     /// Uses ScrollbackBuffer to limit displayed log lines.
     /// </summary>
     [RequireComponent(typeof(InputHandler)), DisallowMultipleComponent]
-    public class ConsoleUI : Singleton<ConsoleUI>
+    public class ConsoleUI : MonoBehaviour
     {
+        public static ConsoleUI Instance { get; private set; }
+
         [Header("References")]
         [SerializeField] private Canvas _consoleCanvas;
         [SerializeField] private TMP_InputField _inputField;
@@ -64,12 +65,16 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
         public bool IsInputFieldFocused => _inputField.isFocused;
 
-        /// <summary>
-        /// Initializes the console, disables it by default, and sets up necessary components.
-        /// </summary>
-        protected override void Awake()
+        private void Awake()
         {
-            base.Awake();
+            // Singleton pattern enforcement
+            if (Instance != null && Instance != this)
+            {
+                Debug.LogWarning("Multiple instances of ConsoleUI detected. Destroying duplicate.");
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
 
             // Disable console UI on start
             _consoleCanvas.gameObject.SetActive(false);
@@ -120,6 +125,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
         /// <summary>
         /// Appends a new line to the output text using ScrollbackBuffer to limit lines.
+        /// Adds log level formatting to every line in a multiline message.
         /// </summary>
         /// <param name="message">The log or command message.</param>
         /// <param name="level">Optional log level to determine color.</param>
@@ -162,17 +168,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         /// </summary>
         private string FormatMessage(LogLevel? level, string message)
         {
-            Color color = level switch
-            {
-                LogLevel.Debug => _levelColors[LogLevel.Debug],
-                LogLevel.Info => _levelColors[LogLevel.Info],
-                LogLevel.Warning => _levelColors[LogLevel.Warning],
-                LogLevel.Error => _levelColors[LogLevel.Error],
-                LogLevel.Command => _levelColors[LogLevel.Command],
-                LogLevel.Output => _levelColors[LogLevel.Output],
-                _ => Color.white
-            };
-
+            Color color = level.HasValue && _levelColors.TryGetValue(level.Value, out var col) ? col : Color.white;
             return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{message}</color>";
         }
 
@@ -203,7 +199,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
             CommandManager.TryExecute(input, out result);
 
             if (!string.IsNullOrEmpty(result))
-                ConsoleUI.Instance.AppendToOutput(result, LogLevel.Output);
+                AppendToOutput(result, LogLevel.Output);
         }
 
         /// <summary>
@@ -224,7 +220,11 @@ namespace MLGWorks.DevConsole.Runtime.UI
                 _inputField.textComponent.color = _originalInputFieldColor;
 
             if (!enableSuggestions)
+            {
+                _autocompleteText.text = string.Empty;
+                _matchedCommand = null;
                 return;
+            }
 
             string input = _inputField.text;
 
