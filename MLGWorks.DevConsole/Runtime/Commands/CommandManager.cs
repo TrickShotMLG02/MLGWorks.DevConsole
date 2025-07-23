@@ -107,17 +107,41 @@ namespace MLGWorks.DevConsole.Runtime.Commands
 
                         for (int j = 0; j < paramsCount; j++)
                         {
-                            paramsArray.SetValue(Convert.ChangeType(args[j], elementType), j);
+                            paramsArray.SetValue(Convert.ChangeType(args[i + j], elementType), j);
                         }
 
                         parsedArgs[i] = paramsArray;
                         break; // No more parameters after params[]
                     }
 
-                    if (i >= args.Length)
+                    // Handle string[] and other arrays manually
+                    if (param.ParameterType == typeof(string[]))
+                    {
+                        parsedArgs[i] = args.Skip(i).ToArray();
+                        break;
+                    }
+                    else if (param.ParameterType.IsArray)
+                    {
+                        var elementType = param.ParameterType.GetElementType();
+                        int arrayLen = args.Length - i;
+                        var array = Array.CreateInstance(elementType, arrayLen);
+
+                        for (int j = 0; j < arrayLen; j++)
+                        {
+                            array.SetValue(Convert.ChangeType(args[i + j], elementType), j);
+                        }
+
+                        parsedArgs[i] = array;
+                        break;
+                    }
+                    else if (i >= args.Length)
+                    {
                         parsedArgs[i] = param.DefaultValue;
+                    }
                     else
+                    {
                         parsedArgs[i] = Convert.ChangeType(args[i], param.ParameterType);
+                    }
                 }
 
                 var returnValue = command.Method.Invoke(null, parsedArgs);
