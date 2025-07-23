@@ -1,6 +1,5 @@
 using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.Core;
-using MLGWorks.DevConsole.Runtime.Utils;
 using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,15 +9,6 @@ using UnityEngine.UI;
 
 namespace MLGWorks.DevConsole.Runtime.UI
 {
-    [Serializable]
-    public struct LogLevelColor
-    {
-        public LogLevel? Level;
-        public Color Color;
-
-        public string GetHex() => ColorUtility.ToHtmlStringRGB(Color);
-    }
-
     /// <summary>
     /// Manages the console UI display and input.
     /// Uses ScrollbackBuffer to limit displayed log lines.
@@ -26,8 +16,6 @@ namespace MLGWorks.DevConsole.Runtime.UI
     [RequireComponent(typeof(InputHandler)), DisallowMultipleComponent]
     public class ConsoleUI : MonoBehaviour
     {
-        public static ConsoleUI Instance { get; private set; }
-
         [Header("References")]
         [SerializeField] private Canvas _consoleCanvas;
         [SerializeField] private TMP_InputField _inputField;
@@ -48,11 +36,9 @@ namespace MLGWorks.DevConsole.Runtime.UI
         public string CommandPrefix => _commandPrefix;
         [SerializeField] private int _maxLinesInBuffer = 1000;
         public bool enableSuggestions = true;
-        private bool _performAutoComplete = false;
-        private CommandInfo _matchedCommand;
         [SerializeField] private Color _invalidCommandColor = new Color(0.8235f, 0.0157f, 0.1765f); // #D2042D
 
-        // ScrollbackBuffer replaces the previous List<string> buffer for managing log lines
+        // Buffer containing the lines to display on the console
         private ScrollbackBuffer _logBuffer;
 
         // Dictionary for quick lookup of log level colors
@@ -67,24 +53,14 @@ namespace MLGWorks.DevConsole.Runtime.UI
 
         private void Awake()
         {
-            // Singleton pattern enforcement
-            if (Instance != null && Instance != this)
-            {
-                Debug.LogWarning("Multiple instances of ConsoleUI detected. Destroying duplicate.");
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             // Disable console UI on start
             _consoleCanvas.gameObject.SetActive(false);
 
-            // Initialize autocomplete engine and command history
+            // Initialize buffer and helpers
+            _logBuffer = new ScrollbackBuffer(_maxLinesInBuffer);
+
             _autocomplete = new AutocompleteEngine();
             _history = new ConsoleHistory();
-
-            // Initialize the ScrollbackBuffer with max lines
-            _logBuffer = new ScrollbackBuffer(_maxLinesInBuffer);
 
             // Setup the color dictionary for log levels
             _levelColors[LogLevel.Debug] = _debugColor;
@@ -112,15 +88,18 @@ namespace MLGWorks.DevConsole.Runtime.UI
         /// </summary>
         public void OnInputSubmit()
         {
-            var cmd = _inputField.text;
-
+            string cmd = _inputField.text;
             if (string.IsNullOrEmpty(cmd))
                 return;
 
             _history.Add(cmd);
             SubmitCommand(cmd);
+
             _inputField.text = string.Empty;
             _inputField.ActivateInputField();
+
+            // Reset autocomplete state when command submitted
+            _autocomplete.SetMatchedCommand(null);
         }
 
         /// <summary>
@@ -149,6 +128,11 @@ namespace MLGWorks.DevConsole.Runtime.UI
             // Join all buffered lines and display
             _outputText.text = string.Join("\n", _logBuffer.GetLines());
 
+            ScrollToBottom();
+        }
+
+        private void ScrollToBottom()
+        {
             // Force UI update and scroll to bottom
             Canvas.ForceUpdateCanvases();
             _scrollRect.verticalNormalizedPosition = 0f;
@@ -160,15 +144,24 @@ namespace MLGWorks.DevConsole.Runtime.UI
         public void ClearLogs()
         {
             _logBuffer = new ScrollbackBuffer(_maxLinesInBuffer);
-            _outputText.text = "";
+            _outputText.text = string.Empty;
+
+            ScrollToBottom();
         }
 
-        /// <summary>
-        /// Formats the message text with color tags based on log level.
-        /// </summary>
         private string FormatMessage(LogLevel? level, string message)
         {
-            Color color = level.HasValue && _levelColors.TryGetValue(level.Value, out var col) ? col : Color.white;
+            Color color = level switch
+            {
+                LogLevel.Debug => _levelColors[LogLevel.Debug],
+                LogLevel.Info => _levelColors[LogLevel.Info],
+                LogLevel.Warning => _levelColors[LogLevel.Warning],
+                LogLevel.Error => _levelColors[LogLevel.Error],
+                LogLevel.Command => _levelColors[LogLevel.Command],
+                LogLevel.Output => _levelColors[LogLevel.Output],
+                _ => Color.white
+            };
+
             return $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{message}</color>";
         }
 
@@ -216,47 +209,42 @@ namespace MLGWorks.DevConsole.Runtime.UI
         /// </summary>
         private void PerformSuggestion()
         {
+            // Reset color of input field text
             if (_inputField.textComponent.color != _originalInputFieldColor)
                 _inputField.textComponent.color = _originalInputFieldColor;
 
             if (!enableSuggestions)
             {
                 _autocompleteText.text = string.Empty;
-                _matchedCommand = null;
+                _autocomplete.SetMatchedCommand(null);
                 return;
             }
 
             string input = _inputField.text;
-
             if (string.IsNullOrWhiteSpace(input))
             {
                 _autocompleteText.text = string.Empty;
-                _matchedCommand = null;
+                _autocomplete.SetMatchedCommand(null);
                 return;
             }
 
-            var suggestion = _autocomplete.GetSuggestion(input, out var matchedCommand);
+            string suggestion = _autocomplete.GetSuggestion(input, out var matchedCommand);
+            _autocomplete.SetMatchedCommand(matchedCommand);
+
             if (!string.IsNullOrEmpty(suggestion) && suggestion != input)
             {
                 _autocompleteText.text = suggestion;
-                _matchedCommand = matchedCommand.Name == input ? null : matchedCommand;
             }
             else
             {
                 _autocompleteText.text = string.Empty;
-                _matchedCommand = null;
 
-                if (suggestion != input)
+                if (matchedCommand == null)
+                {
+                    // Mark input field red for invalid command start
                     _inputField.textComponent.color = _invalidCommandColor;
+                }
             }
-        }
-
-        /// <summary>
-        /// Requests autocomplete to apply on next Update.
-        /// </summary>
-        public void RequestAutoComplete()
-        {
-            _performAutoComplete = true;
         }
 
         /// <summary>
@@ -264,29 +252,22 @@ namespace MLGWorks.DevConsole.Runtime.UI
         /// </summary>
         private void PerformAutoComplete()
         {
-            if (!_performAutoComplete)
+            string newInput = _autocomplete.TryPerformAutoComplete(_inputField.text);
+
+            if (newInput == null)
                 return;
 
-            _performAutoComplete = false;
+            _inputField.text = newInput;
 
-            if (_matchedCommand == null)
-                return;
+            // Move caret to end
+            _inputField.caretPosition = newInput.Length;
+            _inputField.selectionAnchorPosition = newInput.Length;
+            _inputField.selectionFocusPosition = newInput.Length;
+        }
 
-            string input = _inputField.text.TrimStart();
-
-            // If input already exactly matches or starts with the command, do nothing
-            if (input.Equals(_matchedCommand.Name, StringComparison.OrdinalIgnoreCase) ||
-                input.StartsWith(_matchedCommand.Name + " ", StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
-            _inputField.text = _matchedCommand.Name;
-
-            // Move caret to end of input field
-            _inputField.caretPosition = _inputField.text.Length;
-            _inputField.selectionAnchorPosition = _inputField.text.Length;
-            _inputField.selectionFocusPosition = _inputField.text.Length;
+        public void RequestAutoComplete()
+        {
+            _autocomplete.RequestAutoComplete();
         }
     }
 }

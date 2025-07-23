@@ -47,8 +47,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 116b5c66796203545ac4e4bcda47bcd5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  toggleKey: 112
-  ToggleUI: 0
 --- !u!114 &4481951333567279766
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1109,7 +1107,7 @@ MonoBehaviour:
   m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 7307687539629588100}
   m_HorizontalScrollbarVisibility: 2
-  m_VerticalScrollbarVisibility: 2
+  m_VerticalScrollbarVisibility: 0
   m_HorizontalScrollbarSpacing: -3
   m_VerticalScrollbarSpacing: -3
   m_OnValueChanged:

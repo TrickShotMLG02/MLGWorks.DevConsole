@@ -110,10 +110,10 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnToggleConsole(InputAction.CallbackContext context)
         {
-            if (ConsoleUI.Instance.IsInputFieldFocused)
+            if (DevConsole.Instance.ConsoleUI.IsInputFieldFocused)
                 return;
 
-            ConsoleUI.Instance.ToggleVisibility();
+            DevConsole.Instance.ConsoleUI.ToggleVisibility();
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnSubmitCommand(InputAction.CallbackContext context)
         {
-            ConsoleUI.Instance.OnInputSubmit();
+            DevConsole.Instance.ConsoleUI.OnInputSubmit();
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnAutoComplete(InputAction.CallbackContext context)
         {
-            ConsoleUI.Instance.RequestAutoComplete();
+            DevConsole.Instance.ConsoleUI.RequestAutoComplete();
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnCommandHistoryPrevious(InputAction.CallbackContext context)
         {
-            ConsoleUI.Instance.CommandHistoryPrevious();
+            DevConsole.Instance.ConsoleUI.CommandHistoryPrevious();
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnCommandHistoryNext(InputAction.CallbackContext context)
         {
-            ConsoleUI.Instance.CommandHistoryNext();
+            DevConsole.Instance.ConsoleUI.CommandHistoryNext();
         }
     }
 }

@@ -496,15 +496,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3851367445478189784, guid: 429c3f6cd04bc2b4b9fd79409bb359ac, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3851367445478189784, guid: 429c3f6cd04bc2b4b9fd79409bb359ac, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3851367445478189784, guid: 429c3f6cd04bc2b4b9fd79409bb359ac, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: -17
+      objectReference: {fileID: 0}
+    - target: {fileID: 4106066073516445818, guid: 429c3f6cd04bc2b4b9fd79409bb359ac, type: 3}
+      propertyPath: _maxLinesInBuffer
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 4544731565381002808, guid: 429c3f6cd04bc2b4b9fd79409bb359ac, type: 3}
       propertyPath: m_SizeDelta.y
@@ -512,7 +516,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4544731565381002808, guid: 429c3f6cd04bc2b4b9fd79409bb359ac, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.00012207031
+      value: -0.000061035156
       objectReference: {fileID: 0}
     - target: {fileID: 4565175239807423017, guid: 429c3f6cd04bc2b4b9fd79409bb359ac, type: 3}
       propertyPath: ToggleUI

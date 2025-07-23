@@ -22,13 +22,15 @@ namespace MLGWorks.DevConsole.Runtime.Core
 
         private bool _performAutoComplete = false;
         private CommandInfo _matchedCommand;
-        private ConsoleUI consoleUI;
+        private ConsoleUI _consoleUI;
+
+        public ConsoleUI ConsoleUI => _consoleUI;
 
         protected override void Awake()
         {
             base.Awake();
 
-            consoleUI = GetComponent<ConsoleUI>();
+            _consoleUI = GetComponent<ConsoleUI>();
             _history = new ConsoleHistory();
             _autocomplete = new AutocompleteEngine();
 
@@ -51,7 +53,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
         {
             foreach (var log in logBatch)
             {
-                consoleUI.AppendToOutput(log.Message, log.Level);
+                _consoleUI.AppendToOutput(log.Message, log.Level);
             }
         }
 
@@ -72,11 +74,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
             if (!CommandManager.TryExecute(input, out string result))
             {
                 // You may want to show command error or unknown command output
-                consoleUI.AppendToOutput(result, LogLevel.Error);
+                _consoleUI.AppendToOutput(result, LogLevel.Error);
             }
             else if (!string.IsNullOrEmpty(result))
             {
-                consoleUI.AppendToOutput(result, LogLevel.Output);
+                _consoleUI.AppendToOutput(result, LogLevel.Output);
             }
         }
 
@@ -133,7 +135,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// </summary>
         public void ClearLogs()
         {
-            consoleUI.ClearLogs();
+            _consoleUI.ClearLogs();
         }
     }
 }
