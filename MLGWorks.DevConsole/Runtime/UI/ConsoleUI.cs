@@ -131,6 +131,9 @@ namespace MLGWorks.DevConsole.Runtime.UI
             ScrollToBottom();
         }
 
+        /// <summary>
+        /// Function to scroll to the bottom of the scroll view and update the canvas
+        /// </summary>
         private void ScrollToBottom()
         {
             // Force UI update and scroll to bottom
