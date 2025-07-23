@@ -1,5 +1,6 @@
 using MLGWorks.DevConsole.Runtime.Commands;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -32,8 +33,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
             string[] typedArgs = tokens.Skip(1).ToArray();
 
             // Find matching command by prefix
-            var match = CommandManager.Commands.Values
-                .FirstOrDefault(cmd => cmd.Name.StartsWith(typedCommand, StringComparison.OrdinalIgnoreCase));
+            var matchKVP = CommandManager.Commands
+                .FirstOrDefault(pair => pair.Key.StartsWith(typedCommand, StringComparison.OrdinalIgnoreCase));
+
+            var matchedAlias = matchKVP.Key;
+            var match = matchKVP.Value;
 
             matchedCommand = match;
 
@@ -49,7 +53,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             sb.Append(typedCommand);
 
             // Append remaining command letters (missing part)
-            string remainingCommand = match.Name.Substring(typedCommand.Length);
+            string remainingCommand = matchedAlias.Substring(typedCommand.Length);
             if (!string.IsNullOrEmpty(remainingCommand))
                 sb.Append(remainingCommand);
 
