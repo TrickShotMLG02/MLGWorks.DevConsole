@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Logger = MLGWorks.Utils.Logging.Logger;
 
 namespace MLGWorks.DevConsole.Runtime.Commands
@@ -155,9 +156,9 @@ namespace MLGWorks.DevConsole.Runtime.Commands
             // Print entered command to the supplied output sink when one is available.
             output?.AppendToOutput($"> {input}", LogLevel.Command);
 
-            var parts = input.Split(' ');
-            var commandName = parts[0].ToLower();
-            var args = parts.Skip(1).ToArray();
+            var parts = ParseArguments(input);
+            var commandName = parts[0].ToLowerInvariant();
+            var args = parts.Skip(1).ToList();
 
             if (!_commands.TryGetValue(commandName, out var command))
             {
@@ -170,12 +171,16 @@ namespace MLGWorks.DevConsole.Runtime.Commands
                 var parameters = command.Method.GetParameters();
                 var parsedArgs = new object[parameters.Length];
 
-                if (args.Length < parameters.Count(p => !p.IsOptional))
+                int requiredParameterCount = parameters.Count(p =>
+                    !p.IsOptional && !Attribute.IsDefined(p, typeof(ParamArrayAttribute)));
+
+                if (args.Count < requiredParameterCount)
                 {
                     result = command.GetUsage();
                     return false;
                 }
 
+                int argumentIndex = 0;
                 for (int i = 0; i < parameters.Length; i++)
                 {
                     var param = parameters[i];
@@ -185,46 +190,49 @@ namespace MLGWorks.DevConsole.Runtime.Commands
                     if (isParams)
                     {
                         var elementType = param.ParameterType.GetElementType();
-                        int paramsCount = args.Length - i;
+                        int paramsCount = args.Count - argumentIndex;
                         Array paramsArray = Array.CreateInstance(elementType, paramsCount);
 
                         for (int j = 0; j < paramsCount; j++)
-                        {
-                            paramsArray.SetValue(Convert.ChangeType(args[i + j], elementType), j);
-                        }
+                            paramsArray.SetValue(ConvertArgument(args[argumentIndex++], elementType), j);
 
                         parsedArgs[i] = paramsArray;
-                        break; // No more parameters after params[]
+                        continue;
                     }
 
                     // Handle string[] and other arrays manually
                     if (param.ParameterType == typeof(string[]))
                     {
-                        parsedArgs[i] = args.Skip(i).ToArray();
-                        break;
+                        parsedArgs[i] = args.Skip(argumentIndex).ToArray();
+                        argumentIndex = args.Count;
+                        continue;
                     }
                     else if (param.ParameterType.IsArray)
                     {
                         var elementType = param.ParameterType.GetElementType();
-                        int arrayLen = args.Length - i;
+                        int arrayLen = args.Count - argumentIndex;
                         var array = Array.CreateInstance(elementType, arrayLen);
 
                         for (int j = 0; j < arrayLen; j++)
-                        {
-                            array.SetValue(Convert.ChangeType(args[i + j], elementType), j);
-                        }
+                            array.SetValue(ConvertArgument(args[argumentIndex++], elementType), j);
 
                         parsedArgs[i] = array;
-                        break;
+                        continue;
                     }
-                    else if (i >= args.Length)
+                    else if (argumentIndex >= args.Count)
                     {
                         parsedArgs[i] = param.DefaultValue;
                     }
                     else
                     {
-                        parsedArgs[i] = Convert.ChangeType(args[i], param.ParameterType);
+                        parsedArgs[i] = ConvertArgument(args[argumentIndex++], param.ParameterType);
                     }
+                }
+
+                if (argumentIndex < args.Count)
+                {
+                    result = command.GetUsage();
+                    return false;
                 }
 
                 var returnValue = command.Method.Invoke(null, parsedArgs);
@@ -236,6 +244,77 @@ namespace MLGWorks.DevConsole.Runtime.Commands
                 result = $"Command error: {ex.InnerException?.Message ?? ex.Message}";
                 return false;
             }
+        }
+
+        private static object ConvertArgument(string value, Type targetType)
+        {
+            if (targetType == typeof(string))
+                return value;
+
+            if (targetType == typeof(bool))
+                return ReflectionUtils.ParseValue(targetType, new[] { value });
+
+            if (targetType.IsEnum)
+                return Enum.Parse(targetType, value, true);
+
+            return Convert.ChangeType(value, targetType, System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        private static List<string> ParseArguments(string input)
+        {
+            var arguments = new List<string>();
+            var current = new StringBuilder();
+            char quote = '\0';
+            bool escaped = false;
+
+            foreach (char character in input.Trim())
+            {
+                if (escaped)
+                {
+                    current.Append(character);
+                    escaped = false;
+                    continue;
+                }
+
+                if (character == '\\' && quote != '\'')
+                {
+                    escaped = true;
+                    continue;
+                }
+
+                if (quote != '\0')
+                {
+                    if (character == quote)
+                        quote = '\0';
+                    else
+                        current.Append(character);
+                    continue;
+                }
+
+                if (character == '\'' || character == '"')
+                {
+                    quote = character;
+                }
+                else if (char.IsWhiteSpace(character))
+                {
+                    if (current.Length > 0)
+                    {
+                        arguments.Add(current.ToString());
+                        current.Clear();
+                    }
+                }
+                else
+                {
+                    current.Append(character);
+                }
+            }
+
+            if (escaped)
+                current.Append('\\');
+            if (current.Length > 0)
+                arguments.Add(current.ToString());
+
+            return arguments;
         }
     }
 
