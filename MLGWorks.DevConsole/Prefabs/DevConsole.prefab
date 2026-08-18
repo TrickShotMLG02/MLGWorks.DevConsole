@@ -593,7 +593,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4106066073516445818}
-        m_TargetAssemblyTypeName: MLGWorks.DevConsole.Runtime.UI.ConsoleUI, Assembly-CSharp
+        m_TargetAssemblyTypeName: MLGWorks.DevConsole.Runtime.UI.ConsoleUI, MLGWorks.DevConsole
         m_MethodName: OnInputSubmit
         m_Mode: 1
         m_Arguments:
@@ -726,7 +726,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 4106066073516445818}
-        m_TargetAssemblyTypeName: MLGWorks.DevConsole.Runtime.UI.ConsoleUI, Assembly-CSharp
+        m_TargetAssemblyTypeName: MLGWorks.DevConsole.Runtime.UI.ConsoleUI, MLGWorks.DevConsole
         m_MethodName: ToggleVisibility
         m_Mode: 1
         m_Arguments:
