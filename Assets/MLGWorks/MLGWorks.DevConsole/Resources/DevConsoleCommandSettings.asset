@@ -172,7 +172,7 @@ MonoBehaviour:
     description: Gets the value of a variable of a given class
     aliases: []
     assemblyName: MLGWorks.DevConsole
-    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.GetCommand
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.VariableCommands
     methodName: Get
     parameterTypeNames:
     - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
@@ -312,7 +312,7 @@ MonoBehaviour:
     description: Sets the value of a variable of a given class to a specific value
     aliases: []
     assemblyName: MLGWorks.DevConsole
-    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.GetCommand
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.VariableCommands
     methodName: Set
     parameterTypeNames:
     - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089

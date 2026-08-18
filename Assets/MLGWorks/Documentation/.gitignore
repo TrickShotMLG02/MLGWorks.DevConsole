@@ -1,0 +1,6 @@
+# Keep documentation sources and final deliverables only.
+*
+!.gitignore
+!*.tex
+!*.pdf
+!*.meta
