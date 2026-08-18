@@ -37,6 +37,12 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         public CommandDangerLevel DangerLevel { get; set; }
 
         /// <summary>
+        /// Controls the initial catalog state for newly discovered commands.
+        /// Existing catalog state is preserved during rediscovery.
+        /// </summary>
+        public bool EnabledByDefault { get; set; } = true;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CommandAttribute"/> class.
         /// </summary>
         /// <param name="name">Primary command name.</param>

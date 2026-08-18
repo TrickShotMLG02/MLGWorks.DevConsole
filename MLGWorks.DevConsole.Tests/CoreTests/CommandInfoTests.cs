@@ -34,6 +34,7 @@ namespace MLGWorks.DevConsole.Tests.CoreTests
             var attribute = method.GetCustomAttribute<CommandAttribute>();
 
             Assert.That(attribute.DangerLevel, Is.EqualTo(CommandDangerLevel.Dangerous));
+            Assert.That(attribute.EnabledByDefault, Is.False);
         }
 
         [Test]
@@ -84,7 +85,7 @@ namespace MLGWorks.DevConsole.Tests.CoreTests
         private static void Required(int amount) { }
         private static void Optional(int amount = 1) { }
 
-        [Command("dangerous", DangerLevel = CommandDangerLevel.Dangerous)]
+        [Command("dangerous", DangerLevel = CommandDangerLevel.Dangerous, EnabledByDefault = false)]
         private static void DangerousCommand() { }
     }
 }
