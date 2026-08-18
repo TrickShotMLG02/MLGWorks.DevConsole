@@ -35,6 +35,17 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
         }
 
         [Test]
+        public void MissingCatalogDoesNotFallBackToReflectionDiscovery()
+        {
+            CommandManager.RegisterAll();
+            Assert.That(CommandManager.Commands, Is.Not.Empty);
+
+            CommandManager.RegisterFromSettings(null);
+
+            Assert.That(CommandManager.Commands, Is.Empty);
+        }
+
+        [Test]
         public void TestOnlyCommandIsDisabledFromCatalogButDirectTestsStillRun()
         {
             var command = Definition(nameof(CatalogTestCommands.Visible), "catalog-visible");
