@@ -3,6 +3,7 @@ using System.Reflection;
 using MLGWorks.DevConsole.Runtime.Abstractions;
 using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.Core;
+using MLGWorks.DevConsole.Runtime.Configuration;
 using NUnit.Framework;
 
 namespace MLGWorks.DevConsole.Tests.CoreTests
@@ -168,6 +169,10 @@ namespace MLGWorks.DevConsole.Tests.CoreTests
             public IEnumerable<CommandInfo> CommandInfos => Commands.Values;
 
             public void RegisterAll()
+            {
+            }
+
+            public void RegisterFromSettings(DevConsoleCommandSettings settings)
             {
             }
 

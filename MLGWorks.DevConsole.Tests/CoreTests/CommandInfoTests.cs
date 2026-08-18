@@ -28,6 +28,15 @@ namespace MLGWorks.DevConsole.Tests.CoreTests
         }
 
         [Test]
+        public void CommandAttributeSupportsDangerLevel()
+        {
+            var method = typeof(CommandInfoTests).GetMethod(nameof(DangerousCommand), BindingFlags.Static | BindingFlags.NonPublic);
+            var attribute = method.GetCustomAttribute<CommandAttribute>();
+
+            Assert.That(attribute.DangerLevel, Is.EqualTo(CommandDangerLevel.Dangerous));
+        }
+
+        [Test]
         public void CommandSchemeUsesRequiredParameterMarkers()
         {
             var command = Create(nameof(Required));
@@ -74,5 +83,8 @@ namespace MLGWorks.DevConsole.Tests.CoreTests
         private static void NoOp() { }
         private static void Required(int amount) { }
         private static void Optional(int amount = 1) { }
+
+        [Command("dangerous", DangerLevel = CommandDangerLevel.Dangerous)]
+        private static void DangerousCommand() { }
     }
 }

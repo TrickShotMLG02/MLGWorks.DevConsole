@@ -1,6 +1,7 @@
 ﻿using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.UI;
 using MLGWorks.DevConsole.Runtime.Abstractions;
+using MLGWorks.DevConsole.Runtime.Configuration;
 using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
         private ConsoleUI _consoleUI;
         private InputHandler _inputHandler;
 
+        [Header("Command Catalog")]
+        [SerializeField] private DevConsoleCommandSettings _commandSettings;
+
         public ConsoleUI ConsoleUI => _consoleUI;
 
         protected override void Awake()
@@ -36,7 +40,14 @@ namespace MLGWorks.DevConsole.Runtime.Core
             _autocomplete = new AutocompleteEngine(CommandManager.Registry);
             _commandExecutor = new CommandManagerExecutor(_consoleUI);
 
-            CommandManager.Registry.RegisterAll();
+            var commandSettings = _commandSettings != null
+                ? _commandSettings
+                : Resources.Load<DevConsoleCommandSettings>("DevConsoleCommandSettings");
+
+            if (commandSettings != null)
+                CommandManager.Registry.RegisterFromSettings(commandSettings);
+            else
+                CommandManager.Registry.RegisterAll();
             _consoleUI.ConfigureServices(_commandExecutor, _history, _autocomplete);
             _inputHandler.Configure(new ConsoleInputSource(), _consoleUI);
             CommandManager.Output = _consoleUI;
