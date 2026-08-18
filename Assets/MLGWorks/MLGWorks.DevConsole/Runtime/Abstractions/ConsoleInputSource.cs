@@ -10,6 +10,7 @@ namespace MLGWorks.DevConsole.Runtime.Abstractions
     public sealed class ConsoleInputSource : IConsoleInput
     {
         private readonly DevConsoleInputActions _input;
+        private bool _disposed;
 
         public ConsoleInputSource()
         {
@@ -33,17 +34,39 @@ namespace MLGWorks.DevConsole.Runtime.Abstractions
                 .Select(binding => binding.effectivePath)
                 .ToArray();
 
-        public void Enable() => _input.Enable();
-        public void Disable() => _input.Disable();
+        public void Enable()
+        {
+            ThrowIfDisposed();
+            _input.Enable();
+        }
+
+        public void Disable()
+        {
+            if (!_disposed)
+                _input.DevConsole.Disable();
+        }
 
         public void Dispose()
         {
+            if (_disposed)
+                return;
+
+            // The generated wrapper asserts in its finalizer unless the action
+            // map is disabled before the asset is destroyed.
+            _input.DevConsole.Disable();
             _input.DevConsole.ToggleConsole.performed -= OnToggleConsole;
             _input.DevConsole.SubmitCommand.performed -= OnSubmitCommand;
             _input.DevConsole.AutoComplete.performed -= OnAutoComplete;
             _input.DevConsole.CommandHistoryPrevious.performed -= OnHistoryPrevious;
             _input.DevConsole.CommandHistoryNext.performed -= OnHistoryNext;
             _input.Dispose();
+            _disposed = true;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(ConsoleInputSource));
         }
 
         private void OnToggleConsole(UnityEngine.InputSystem.InputAction.CallbackContext context) => ToggleConsole?.Invoke();

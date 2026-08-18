@@ -14,6 +14,8 @@ namespace MLGWorks.DevConsole.Runtime.Core
     public class InputHandler : MonoBehaviour
     {
         private IConsoleInput _input;
+        private IConsoleInputFactory _inputFactory = new ConsoleInputFactory();
+        private IConsoleActions _consoleActions;
         private readonly List<KeyCode?> _disabledKeys = new();
 
         /// <summary>
@@ -21,7 +23,32 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// </summary>
         private void Awake()
         {
-            _input = new ConsoleInputSource();
+            _consoleActions = GetComponent<IConsoleActions>();
+        }
+
+        /// <summary>
+        /// Supplies the input source and console target used by this handler.
+        /// This is called by the composition root before Unity enables the component.
+        /// </summary>
+        public void Configure(IConsoleInput input, IConsoleActions consoleActions,
+            IConsoleInputFactory inputFactory = null)
+        {
+            if (_input != null && !ReferenceEquals(_input, input))
+            {
+                UnsubscribeFromInput();
+                _input.Dispose();
+            }
+
+            _input = input;
+            _consoleActions = consoleActions;
+            _inputFactory = inputFactory ?? _inputFactory;
+
+            if (isActiveAndEnabled)
+            {
+                SubscribeToInput();
+                _input.Enable();
+            }
+
             DisableUIKeys();
         }
 
@@ -45,11 +72,10 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// </summary>
         private void OnEnable()
         {
-            _input.ToggleConsole += OnToggleConsole;
-            _input.SubmitCommand += OnSubmitCommand;
-            _input.AutoComplete += OnAutoComplete;
-            _input.HistoryPrevious += OnCommandHistoryPrevious;
-            _input.HistoryNext += OnCommandHistoryNext;
+            _input ??= _inputFactory.Create();
+            _consoleActions ??= GetComponent<IConsoleActions>();
+            DisableUIKeys();
+            SubscribeToInput();
             _input.Enable();
         }
 
@@ -61,11 +87,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             if (_input == null)
                 return;
 
-            _input.ToggleConsole -= OnToggleConsole;
-            _input.SubmitCommand -= OnSubmitCommand;
-            _input.AutoComplete -= OnAutoComplete;
-            _input.HistoryPrevious -= OnCommandHistoryPrevious;
-            _input.HistoryNext -= OnCommandHistoryNext;
+            UnsubscribeFromInput();
             _input.Disable();
         }
 
@@ -108,41 +130,59 @@ namespace MLGWorks.DevConsole.Runtime.Core
             }
         }
 
-        private static bool IsConsoleVisible =>
-            DevConsole.Instance != null &&
-            DevConsole.Instance.ConsoleUI != null &&
-            DevConsole.Instance.ConsoleUI.IsVisible;
+        private bool IsConsoleVisible => _consoleActions != null && _consoleActions.IsVisible;
 
         private void OnToggleConsole()
         {
-            if (DevConsole.Instance.ConsoleUI.IsInputFieldFocused)
+            if (_consoleActions == null || _consoleActions.IsInputFieldFocused)
                 return;
 
-            DevConsole.Instance.ConsoleUI.ToggleVisibility();
+            _consoleActions.ToggleVisibility();
         }
 
         private void OnSubmitCommand()
         {
             if (IsConsoleVisible)
-                DevConsole.Instance.ConsoleUI.OnInputSubmit();
+                _consoleActions.SubmitInput();
         }
 
         private void OnAutoComplete()
         {
             if (IsConsoleVisible)
-                DevConsole.Instance.ConsoleUI.RequestAutoComplete();
+                _consoleActions.RequestAutoComplete();
         }
 
         private void OnCommandHistoryPrevious()
         {
             if (IsConsoleVisible)
-                DevConsole.Instance.ConsoleUI.CommandHistoryPrevious();
+                _consoleActions.HistoryPrevious();
         }
 
         private void OnCommandHistoryNext()
         {
             if (IsConsoleVisible)
-                DevConsole.Instance.ConsoleUI.CommandHistoryNext();
+                _consoleActions.HistoryNext();
+        }
+
+        private void SubscribeToInput()
+        {
+            _input.ToggleConsole += OnToggleConsole;
+            _input.SubmitCommand += OnSubmitCommand;
+            _input.AutoComplete += OnAutoComplete;
+            _input.HistoryPrevious += OnCommandHistoryPrevious;
+            _input.HistoryNext += OnCommandHistoryNext;
+        }
+
+        private void UnsubscribeFromInput()
+        {
+            if (_input == null)
+                return;
+
+            _input.ToggleConsole -= OnToggleConsole;
+            _input.SubmitCommand -= OnSubmitCommand;
+            _input.AutoComplete -= OnAutoComplete;
+            _input.HistoryPrevious -= OnCommandHistoryPrevious;
+            _input.HistoryNext -= OnCommandHistoryNext;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
     /// Uses ScrollbackBuffer to limit displayed log lines.
     /// </summary>
     [RequireComponent(typeof(InputHandler)), DisallowMultipleComponent]
-    public class ConsoleUI : MonoBehaviour, IConsoleOutput
+    public class ConsoleUI : MonoBehaviour, IConsoleActions
     {
         [Header("References")]
         [SerializeField] private Canvas _consoleCanvas;
@@ -125,6 +125,8 @@ namespace MLGWorks.DevConsole.Runtime.UI
             _autocomplete.SetMatchedCommand(null);
         }
 
+        public void SubmitInput() => OnInputSubmit();
+
         /// <summary>
         /// Appends a new line to the output text using ScrollbackBuffer to limit lines.
         /// Adds log level formatting to every line in a multiline message.
@@ -200,6 +202,8 @@ namespace MLGWorks.DevConsole.Runtime.UI
             _inputField.caretPosition = _inputField.text.Length;
         }
 
+        public void HistoryPrevious() => CommandHistoryPrevious();
+
         /// <summary>
         /// Navigates forward in command history and updates the input field.
         /// </summary>
@@ -208,6 +212,8 @@ namespace MLGWorks.DevConsole.Runtime.UI
             _inputField.text = _history.Next();
             _inputField.caretPosition = _inputField.text.Length;
         }
+
+        public void HistoryNext() => CommandHistoryNext();
 
         /// <summary>
         /// Executes the command string and appends output if any.
