@@ -24,7 +24,7 @@ A modular, extensible developer console for Unity with command discovery, autoco
 3. Open **Window → MLGWorks → DevConsole Commands**.
 4. Create or select a `DevConsoleCommandSettings` asset.
 5. Click **Refresh Discovery**.
-6. Assign the catalog to the selected `DevConsole` object, or place it at `Resources/DevConsoleCommandSettings.asset`.
+6. Assign `Samples/DevConsoleSample/DevConsoleCommandSettings.asset` to the `DevConsole` object. The included sample scene is already configured.
 7. Enter Play Mode and open the console using the configured input action.
 
 The catalog is the runtime source of truth. If no catalog can be found, no commands are registered.
@@ -32,6 +32,8 @@ The catalog is the runtime source of truth. If no catalog can be found, no comma
 ## 📖 Documentation
 
 The complete setup and configuration guide is available in the [LaTeX documentation](Documentation/DevConsoleDocumentation.pdf) and its [source](Documentation/DevConsoleDocumentation.tex).
+
+The ready-to-import demonstration command is located in [`Samples/DevConsoleSample/DemoCommand.cs`](Samples/DevConsoleSample/DemoCommand.cs).
 
 ## ⌨️ Defining commands
 

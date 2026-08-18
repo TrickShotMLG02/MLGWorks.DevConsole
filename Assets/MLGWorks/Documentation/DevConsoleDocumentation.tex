@@ -138,7 +138,7 @@ If the repository is being used directly as an Assets package, place the \texttt
   \item Open \textbf{Window $\rightarrow$ MLGWorks $\rightarrow$ DevConsole Commands}.
   \item Create a \texttt{DevConsoleCommandSettings} asset, or select the included asset.
   \item Click \textbf{Refresh Discovery}.
-  \item Assign the asset to the selected DevConsole object, or place it under \texttt{Resources/} as \texttt{DevConsoleCommandSettings.asset}.
+  \item Assign the catalog asset to the selected DevConsole object. The included sample scene already references \texttt{Samples/DevConsoleSample/DevConsoleCommandSettings.asset}.
   \item Enter Play Mode and use the configured input action to open the console.
 \end{enumerate}
 
@@ -250,7 +250,7 @@ At startup, DevConsole first uses an explicitly assigned settings asset. If none
 \begin{lstlisting}[style=csharp]
 // Explicit assignment is preferred on the DevConsole component.
 // Otherwise place the catalog at:
-// Assets/.../Resources/DevConsoleCommandSettings.asset
+// Assets/MLGWorks/Samples/DevConsoleSample/DevConsoleCommandSettings.asset
 \end{lstlisting}
 
 Only enabled, non-obsolete, non-test-only commands from enabled classes are resolved and registered. Aliases are registered alongside the primary name. Invalid or stale entries are skipped with a warning.
