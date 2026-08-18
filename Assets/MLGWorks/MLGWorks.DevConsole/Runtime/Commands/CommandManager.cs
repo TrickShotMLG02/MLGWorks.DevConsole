@@ -90,7 +90,8 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         {
             if (settings == null)
             {
-                RegisterAll();
+                _commands.Clear();
+                _commandInfos.Clear();
                 return;
             }
 

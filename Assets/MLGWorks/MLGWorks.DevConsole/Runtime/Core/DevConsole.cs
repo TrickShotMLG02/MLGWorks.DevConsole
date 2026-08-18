@@ -47,7 +47,12 @@ namespace MLGWorks.DevConsole.Runtime.Core
             if (commandSettings != null)
                 CommandManager.Registry.RegisterFromSettings(commandSettings);
             else
-                CommandManager.Registry.RegisterAll();
+            {
+                CommandManager.Registry.RegisterFromSettings(null);
+                Logger.Warning(
+                    "[DevConsole] Command catalog not found. No commands were registered. " +
+                    "Create or assign a DevConsoleCommandSettings asset before shipping.");
+            }
             _consoleUI.ConfigureServices(_commandExecutor, _history, _autocomplete);
             _inputHandler.Configure(new ConsoleInputSource(), _consoleUI);
             CommandManager.Output = _consoleUI;
