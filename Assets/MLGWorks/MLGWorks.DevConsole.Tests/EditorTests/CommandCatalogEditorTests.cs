@@ -1,5 +1,6 @@
 using System;
 using MLGWorks.DevConsole.Runtime.Commands;
+using MLGWorks.DevConsole.Runtime.Commands.BuiltIn;
 using MLGWorks.DevConsole.Runtime.Configuration;
 using NUnit.Framework;
 using UnityEngine;
@@ -89,12 +90,12 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
         [Test]
         public void EnabledCatalogCommandCanExecute()
         {
-            _settings.ReplaceCommands(new[] { Definition(nameof(CatalogTestCommands.Visible), "catalog-visible") });
+            _settings.ReplaceCommands(new[] { DefinitionFor(typeof(MathCommands), nameof(MathCommands.Add), "add") });
 
             CommandManager.RegisterFromSettings(_settings);
 
-            Assert.That(CommandManager.TryExecute("catalog-visible", out var result), Is.True);
-            Assert.That(result, Is.EqualTo("visible"));
+            Assert.That(CommandManager.TryExecute("add 2 3", out var result), Is.True);
+            Assert.That(result, Is.EqualTo("5"));
         }
 
         [Test]
@@ -172,12 +173,12 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
         [Test]
         public void DisabledCommandMetricIncludesIndividualAndClassDisablesButExcludesObsolete()
         {
-            var visible = Definition(nameof(CatalogTestCommands.Visible), "catalog-visible");
-            var second = Definition(nameof(CatalogTestCommands.Second), "catalog-second");
-            var obsolete = Definition(nameof(CatalogTestCommands.Obsolete), "catalog-obsolete");
+            var visible = DefinitionFor(typeof(MathCommands), nameof(MathCommands.Add), "add");
+            var second = DefinitionFor(typeof(MathCommands), nameof(MathCommands.Subtract), "sub");
+            var obsolete = DefinitionFor(typeof(MathCommands), nameof(MathCommands.Multiply), "mul");
             _settings.ReplaceCommands(new[] { visible, second, obsolete });
             _settings.SetCommandEnabled(visible.StableId, false);
-            _settings.SetTypeDisabled(typeof(CatalogTestCommands).FullName, true);
+            _settings.SetTypeDisabled(typeof(MathCommands).FullName, true);
             _settings.ReplaceCommands(new[] { visible, second });
 
             Assert.That(_settings.GetDisabledCommandCount(), Is.EqualTo(2));
@@ -185,14 +186,23 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
 
         private static DevConsoleCommandDefinition Definition(string methodName, string commandName, bool enabled = true)
         {
-            var method = typeof(CatalogTestCommands).GetMethod(methodName);
+            return DefinitionFor(typeof(CatalogTestCommands), methodName, commandName, enabled);
+        }
+
+        private static DevConsoleCommandDefinition DefinitionFor(
+            Type declaringType,
+            string methodName,
+            string commandName,
+            bool enabled = true)
+        {
+            var method = declaringType.GetMethod(methodName);
             return new DevConsoleCommandDefinition
             {
                 commandName = commandName,
                 description = "Catalog test command",
                 aliases = Array.Empty<string>(),
-                assemblyName = typeof(CatalogTestCommands).Assembly.GetName().Name,
-                declaringTypeName = typeof(CatalogTestCommands).FullName,
+                assemblyName = declaringType.Assembly.GetName().Name,
+                declaringTypeName = declaringType.FullName,
                 methodName = methodName,
                 parameterTypeNames = Array.ConvertAll(method.GetParameters(), parameter => parameter.ParameterType.AssemblyQualifiedName),
                 enabled = enabled
