@@ -1,0 +1,27 @@
+{
+  "name": "com.mlgworks.devconsole",
+  "version": "1.0.0",
+  "displayName": "MLGWorks DevConsole",
+  "description": "A modular, testable developer console for Unity with editor-managed command discovery, autocomplete, history, logging, and safety controls.",
+  "unity": "6000.0",
+  "documentationUrl": "https://github.com/TrickShotMLG02/MLGWorks.DevConsole#readme",
+  "changelogUrl": "https://github.com/TrickShotMLG02/MLGWorks.DevConsole/releases",
+  "licensesUrl": "https://github.com/TrickShotMLG02/MLGWorks.DevConsole/blob/main/LICENSE",
+  "license": "MIT",
+  "author": {
+    "name": "TrickShotMLG02",
+    "url": "https://github.com/TrickShotMLG02"
+  },
+  "dependencies": {
+    "com.mlgworks.utils": "https://github.com/TrickShotMLG02/MLGWorks.Utils.git",
+    "com.unity.inputsystem": "1.20.0",
+    "com.unity.ugui": "2.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "DevConsole Sample",
+      "description": "A configured scene and command catalog demonstrating the MLGWorks DevConsole.",
+      "path": "Samples~/DevConsoleSample"
+    }
+  ]
+}
