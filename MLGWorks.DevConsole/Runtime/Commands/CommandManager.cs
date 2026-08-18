@@ -1,5 +1,6 @@
 using MLGWorks.DevConsole.Runtime.UI;
 using MLGWorks.DevConsole.Runtime.Utils;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,16 @@ namespace MLGWorks.DevConsole.Runtime.Commands
     /// </summary>
     public static class CommandManager
     {
+        /// <summary>
+        /// Interface view of the legacy static command registry.
+        /// </summary>
+        public static ICommandRegistry Registry { get; } = new CommandManagerRegistry();
+
+        /// <summary>
+        /// Optional output sink used by callers of the legacy static execution API.
+        /// </summary>
+        public static IConsoleOutput Output { get; set; }
+
         // Internal dictionary mapping command names and aliases (lowercase) to CommandInfo instances.
         private static readonly Dictionary<string, CommandInfo> _commands = new();
 
@@ -130,11 +141,19 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         /// <returns>True if the command executed successfully; false otherwise.</returns>
         public static bool TryExecute(string input, out string result)
         {
+            return TryExecute(input, Output, out result);
+        }
+
+        /// <summary>
+        /// Attempts to execute a command and optionally writes the command echo to an output sink.
+        /// </summary>
+        public static bool TryExecute(string input, IConsoleOutput output, out string result)
+        {
             result = string.Empty;
             if (string.IsNullOrWhiteSpace(input)) return false;
 
-            // Print entered command to console output as a command log
-            Core.DevConsole.Instance.ConsoleUI.AppendToOutput($"> {input}", LogLevel.Command);
+            // Print entered command to the supplied output sink when one is available.
+            output?.AppendToOutput($"> {input}", LogLevel.Command);
 
             var parts = input.Split(' ');
             var commandName = parts[0].ToLower();

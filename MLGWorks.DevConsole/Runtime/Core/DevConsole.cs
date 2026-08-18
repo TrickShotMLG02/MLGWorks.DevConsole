@@ -1,5 +1,6 @@
 ﻿using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.UI;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
@@ -17,11 +18,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
     [RequireComponent(typeof(ConsoleUI)), DisallowMultipleComponent]
     public class DevConsole : Singleton<DevConsole>
     {
-        private ConsoleHistory _history;
-        private AutocompleteEngine _autocomplete;
-
-        private bool _performAutoComplete = false;
-        private CommandInfo _matchedCommand;
+        private ICommandHistory _history;
+        private IAutocompleteEngine _autocomplete;
+        private ICommandExecutor _commandExecutor;
         private ConsoleUI _consoleUI;
 
         public ConsoleUI ConsoleUI => _consoleUI;
@@ -32,9 +31,12 @@ namespace MLGWorks.DevConsole.Runtime.Core
 
             _consoleUI = GetComponent<ConsoleUI>();
             _history = new ConsoleHistory();
-            _autocomplete = new AutocompleteEngine();
+            _autocomplete = new AutocompleteEngine(CommandManager.Registry);
+            _commandExecutor = new CommandManagerExecutor(_consoleUI);
 
-            CommandManager.RegisterAll();
+            CommandManager.Registry.RegisterAll();
+            _consoleUI.ConfigureServices(_commandExecutor, _history, _autocomplete);
+            CommandManager.Output = _consoleUI;
 
             Logger.Instance.OnNewLogBatch += HandleLogger;
         }
@@ -44,6 +46,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
             if (Logger.Instance != null)
             {
                 Logger.Instance.OnNewLogBatch -= HandleLogger;
+            }
+
+            if (ReferenceEquals(CommandManager.Output, _consoleUI))
+            {
+                CommandManager.Output = null;
             }
 
             base.OnDestroy();
@@ -71,7 +78,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
 
         private void SubmitCommand(string input)
         {
-            if (!CommandManager.TryExecute(input, out string result))
+            if (!_commandExecutor.TryExecute(input, out string result))
             {
                 // You may want to show command error or unknown command output
                 _consoleUI.AppendToOutput(result, LogLevel.Error);
@@ -88,36 +95,21 @@ namespace MLGWorks.DevConsole.Runtime.Core
         public string GetSuggestion(string input)
         {
             var suggestion = _autocomplete.GetSuggestion(input, out var matchedCmd);
-            _matchedCommand = matchedCmd;
+            _autocomplete.SetMatchedCommand(matchedCmd);
             return suggestion;
         }
 
         /// <summary>
         /// Request autocomplete application
         /// </summary>
-        public void RequestAutoComplete() => _performAutoComplete = true;
+        public void RequestAutoComplete() => _autocomplete.RequestAutoComplete();
 
         /// <summary>
         /// Apply autocomplete if requested
         /// </summary>
         public string PerformAutoComplete(string currentInput)
         {
-            if (!_performAutoComplete)
-                return currentInput;
-
-            _performAutoComplete = false;
-
-            if (_matchedCommand == null)
-                return currentInput;
-
-            // If input already matches or starts with command, do nothing
-            if (currentInput.Equals(_matchedCommand.Name, StringComparison.OrdinalIgnoreCase) ||
-                currentInput.StartsWith(_matchedCommand.Name + " ", StringComparison.OrdinalIgnoreCase))
-            {
-                return currentInput;
-            }
-
-            return _matchedCommand.Name;
+            return _autocomplete.TryPerformAutoComplete(currentInput) ?? currentInput;
         }
 
         /// <summary>
