@@ -1,9 +1,9 @@
 ﻿using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.UI;
 using MLGWorks.Utils.Logging;
-using MLGWorks.Utils.Patterns;
 using System;
 using System.Collections.Generic;
+using MLGWorks.Utils.Patterns.Singletons;
 using UnityEngine;
 using static MLGWorks.Utils.Logging.Logger;
 
