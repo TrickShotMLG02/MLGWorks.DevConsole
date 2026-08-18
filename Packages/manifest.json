@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.mlgworks.devconsole": "https://github.com/TrickShotMLG02/MLGWorks.DevConsole.git",
     "com.mlgworks.utils": "https://github.com/TrickShotMLG02/MLGWorks.Utils.git",
     "com.unity.collab-proxy": "2.12.4",
     "com.unity.feature.development": "1.0.2",
