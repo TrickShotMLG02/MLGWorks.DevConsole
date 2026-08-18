@@ -54,7 +54,7 @@ namespace MLGWorks.DevConsole.Editors
                                 .Select(parameter => parameter.ParameterType.AssemblyQualifiedName)
                                 .ToArray(),
                             isTestOnly = IsTestAssembly(assembly),
-                            enabled = true
+                            enabled = attribute.EnabledByDefault
                         });
                     }
                 }

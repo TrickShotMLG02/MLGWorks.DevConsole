@@ -16,6 +16,8 @@ namespace MLGWorks.DevConsole.Editors
         private Vector2 _scrollPosition;
         private string _search = string.Empty;
         private readonly Dictionary<string, bool> _expandedTypes = new();
+        private GUIStyle _searchHintLabelStyle;
+        private GUIStyle _metricsStyle;
 
         [MenuItem("Window/MLGWorks/DevConsole Commands")]
         public static void ShowWindow()
@@ -63,13 +65,21 @@ namespace MLGWorks.DevConsole.Editors
 
             _search = EditorGUILayout.TextField("Search", _search);
 
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                EditorGUILayout.LabelField("Search prefixes:", SearchHintLabelStyle);
+                EditorGUILayout.LabelField("No prefix = command names", SearchHintLabelStyle);
+                EditorGUILayout.LabelField("$ = classes and namespaces", SearchHintLabelStyle);
+                EditorGUILayout.LabelField("# = all catalog metadata", SearchHintLabelStyle);
+            }
+
             GUILayout.Space(6f);
 
             EditorGUILayout.LabelField(
                 $"Commands: {_settings.GetCommandCount()} | Disabled: {_settings.GetDisabledCommandCount()} | " +
                 $"Obsolete: {_settings.GetObsoleteCommandCount()} | " +
                 $"Disabled classes: {_settings.DisabledTypeNames.Count}",
-                EditorStyles.miniLabel);
+                MetricsStyle);
 
             GUILayout.Space(8f);
 
@@ -84,14 +94,44 @@ namespace MLGWorks.DevConsole.Editors
             var query = _settings.Commands.AsEnumerable();
             if (!string.IsNullOrWhiteSpace(_search))
             {
-                query = query.Where(command =>
-                    command.commandName.IndexOf(_search, System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    command.declaringTypeName.IndexOf(_search, System.StringComparison.OrdinalIgnoreCase) >= 0);
+                string search = _search.Trim();
+                char prefix = search[0];
+                string term = prefix is '$' or '#' ? search.Substring(1).Trim() : search;
+
+                if (term.Length == 0)
+                    return Enumerable.Empty<IGrouping<string, DevConsoleCommandDefinition>>();
+
+                query = prefix switch
+                {
+                    '$' => query.Where(command => Matches(command.declaringTypeName, term)),
+                    '#' => query.Where(command =>
+                        Matches(command.commandName, term) ||
+                        Matches(command.declaringTypeName, term) ||
+                        Matches(command.assemblyName, term) ||
+                        Matches(command.methodName, term)),
+                    _ => query.Where(command => Matches(command.commandName, term))
+                };
             }
 
             return query.GroupBy(command => command.declaringTypeName)
                 .OrderBy(group => group.Key, System.StringComparer.Ordinal);
         }
+
+        private static bool Matches(string value, string search)
+        {
+            return !string.IsNullOrEmpty(value) &&
+                   value.IndexOf(search, System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private GUIStyle SearchHintLabelStyle => _searchHintLabelStyle ??= new GUIStyle(EditorStyles.label)
+        {
+            fontSize = 12
+        };
+
+        private GUIStyle MetricsStyle => _metricsStyle ??= new GUIStyle(EditorStyles.label)
+        {
+            fontSize = 12
+        };
 
         private void DrawTypeGroup(string typeName, List<DevConsoleCommandDefinition> commands)
         {

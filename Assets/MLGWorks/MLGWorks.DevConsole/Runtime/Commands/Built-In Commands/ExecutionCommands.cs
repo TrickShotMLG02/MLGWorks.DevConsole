@@ -17,7 +17,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         /// <param name="fullMethodName">Full method name including class (e.g. "MyNamespace.MyClass.MyMethod")</param>
         /// <param name="args">Arguments as strings</param>
         /// <returns>Result of method call or error message</returns>
-        [Command("invoke", "Invokes a static or instance method on a class with string args", "exec", DangerLevel = CommandDangerLevel.Dangerous)]
+        [Command("invoke", "Invokes a static or instance method on a class with string args", "exec", DangerLevel = CommandDangerLevel.Dangerous, EnabledByDefault = false)]
         public static string Invoke(string fullMethodName, string[] args = null)
         {
             args ??= Array.Empty<string>();
