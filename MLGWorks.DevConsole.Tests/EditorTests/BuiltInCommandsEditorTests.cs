@@ -243,9 +243,9 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
         [Test]
         public void GetReadsStaticFieldsAndProperties()
         {
-            Assert.That(GetCommand.Get(nameof(VariableTargets), nameof(VariableTargets.IntValue)),
+            Assert.That(VariableCommands.Get(nameof(VariableTargets), nameof(VariableTargets.IntValue)),
                 Is.EqualTo("VariableTargets.IntValue = 12"));
-            Assert.That(GetCommand.Get(nameof(VariableTargets), nameof(VariableTargets.Name)),
+            Assert.That(VariableCommands.Get(nameof(VariableTargets), nameof(VariableTargets.Name)),
                 Is.EqualTo("VariableTargets.Name = initial"));
         }
 
@@ -253,16 +253,16 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
         public void GetReportsMissingTypeAndMember()
         {
             const string missingType = "DefinitelyMissingType_DevConsole_BuiltIn";
-            Assert.That(GetCommand.Get(missingType, "Value"), Is.EqualTo($"Type '{missingType}' not found."));
-            Assert.That(GetCommand.Get(nameof(VariableTargets), "Missing"),
+            Assert.That(VariableCommands.Get(missingType, "Value"), Is.EqualTo($"Type '{missingType}' not found."));
+            Assert.That(VariableCommands.Get(nameof(VariableTargets), "Missing"),
                 Is.EqualTo("Variable 'Missing' not found in VariableTargets."));
         }
 
         [Test]
         public void SetWritesFieldsAndProperties()
         {
-            var fieldResult = GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.IntValue), new[] { "42" });
-            var propertyResult = GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.Name), new[] { "changed" });
+            var fieldResult = VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.IntValue), new[] { "42" });
+            var propertyResult = VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.Name), new[] { "changed" });
 
             Assert.That(fieldResult, Is.EqualTo("set VariableTargets.IntValue 12 => 42"));
             Assert.That(propertyResult, Is.EqualTo("set VariableTargets.Name initial => changed"));
@@ -273,10 +273,10 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
         [Test]
         public void SetParsesBooleansEnumsArraysAndDictionaries()
         {
-            GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.Enabled), new[] { "yes" });
-            GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.Mode), new[] { "Beta" });
-            GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.Numbers), new[] { "1", "2", "3" });
-            GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.Values), new[] { "one=1", "two=2" });
+            VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.Enabled), new[] { "yes" });
+            VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.Mode), new[] { "Beta" });
+            VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.Numbers), new[] { "1", "2", "3" });
+            VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.Values), new[] { "one=1", "two=2" });
 
             Assert.That(VariableTargets.Enabled, Is.True);
             Assert.That(VariableTargets.Mode, Is.EqualTo(TestMode.Beta));
@@ -287,21 +287,21 @@ namespace MLGWorks.DevConsole.Tests.EditorTests
         [Test]
         public void SetReportsMissingValueTypeMemberAndReadOnlyProperty()
         {
-            Assert.That(GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.IntValue), Array.Empty<string>()),
+            Assert.That(VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.IntValue), Array.Empty<string>()),
                 Is.EqualTo("Usage: set <ClassName> <VariableName> <Value>"));
             const string missingType = "DefinitelyMissingType_DevConsole_BuiltIn";
-            Assert.That(GetCommand.Set(missingType, "Value", new[] { "1" }),
+            Assert.That(VariableCommands.Set(missingType, "Value", new[] { "1" }),
                 Is.EqualTo($"Type '{missingType}' not found."));
-            Assert.That(GetCommand.Set(nameof(VariableTargets), "Missing", new[] { "1" }),
+            Assert.That(VariableCommands.Set(nameof(VariableTargets), "Missing", new[] { "1" }),
                 Is.EqualTo("Variable 'Missing' not found in VariableTargets."));
-            Assert.That(GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.ReadOnly), new[] { "x" }),
+            Assert.That(VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.ReadOnly), new[] { "x" }),
                 Is.EqualTo("Property 'ReadOnly' is read-only."));
         }
 
         [Test]
         public void SetReportsInvalidValues()
         {
-            var result = GetCommand.Set(nameof(VariableTargets), nameof(VariableTargets.IntValue), new[] { "invalid" });
+            var result = VariableCommands.Set(nameof(VariableTargets), nameof(VariableTargets.IntValue), new[] { "invalid" });
 
             StringAssert.StartsWith("Failed to set value:", result);
         }

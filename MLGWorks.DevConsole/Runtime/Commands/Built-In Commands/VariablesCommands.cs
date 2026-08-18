@@ -7,7 +7,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
     /// <summary>
     /// Provides built-in console commands to get or set static or instance variables/properties by reflection.
     /// </summary>
-    public static class GetCommand
+    public static class VariableCommands
     {
         /// <summary>
         /// Gets the value of a variable or property of a given class.

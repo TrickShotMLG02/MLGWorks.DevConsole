@@ -1,0 +1,332 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=25mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+
+\definecolor{mlgblue}{HTML}{1769AA}
+\definecolor{mlgcyan}{HTML}{00A6A6}
+\definecolor{mlgyellow}{HTML}{FFF3BF}
+\definecolor{mlgred}{HTML}{FFE0E0}
+\definecolor{codebg}{HTML}{F4F7FA}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=mlgblue,
+  urlcolor=mlgblue,
+  pdftitle={MLGWorks DevConsole Documentation},
+  pdfauthor={MLGWorks}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{MLGWorks DevConsole}
+\rhead{User Guide}
+\cfoot{\thepage}
+\setlength{\headheight}{14pt}
+\setlength{\emergencystretch}{3em}
+
+\titleformat{\section}{\Large\bfseries\color{mlgblue}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\large\bfseries\color{mlgcyan}}{\thesubsection}{0.7em}{}
+
+\lstdefinestyle{csharp}{
+  language={[Sharp]C},
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{mlgblue}\bfseries,
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{purple},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!15},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  captionpos=b
+}
+
+\newtcolorbox{important}{colback=mlgyellow,colframe=orange!65!black,title=Important}
+\newtcolorbox{safety}{colback=mlgred,colframe=red!65!black,title=Safety note}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+
+\begin{titlepage}
+  \centering
+  \vspace*{28mm}
+  {\color{mlgcyan}\rule{0.22\textwidth}{3pt}\par}
+  \vspace{8mm}
+  {\Huge\bfseries\color{mlgblue} MLGWorks DevConsole\par}
+  \vspace{6mm}
+  {\Large Modular developer console for Unity\par}
+  \vspace{18mm}
+  \begin{tcolorbox}[
+    width=0.78\textwidth,
+    colback=mlgblue!7,
+    colframe=mlgblue!55,
+    boxrule=0.8pt,
+    arc=2mm,
+    left=8mm,
+    right=8mm,
+    top=5mm,
+    bottom=5mm]
+    \centering
+    {\large\bfseries Setup, configuration, extension, and production guide\par}
+  \end{tcolorbox}
+  \vspace{8mm}
+  {\color{mlgcyan}\rule{0.12\textwidth}{1.5pt}\par}
+  \vfill
+  {\large\bfseries MLGWorks\par}
+  \vspace{2mm}
+  {\large Version 1.0.0 \textcolor{gray}{\textbullet} \today\par}
+\end{titlepage}
+
+\clearpage
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\hypersetup{pageanchor=true}
+\pagenumbering{arabic}
+\newpage
+
+\section{Overview}
+
+MLGWorks DevConsole is a runtime developer console for Unity projects. It provides a visible command interface for development workflows while keeping command registration explicit, configurable, and testable. The system includes command execution, autocomplete, command history, scrollback, Unity logging integration, and an editor-managed command catalog.
+
+The main design principle is that discovery happens in the editor and execution happens from a serialized catalog. This makes the set of available commands reviewable in source control and prevents an accidental runtime reflection scan from exposing commands in a build.
+
+\begin{important}
+The catalog is the source of truth at runtime. A missing catalog is a configuration error and results in zero registered commands.
+\end{important}
+
+\section{Requirements and installation}
+
+\subsection{Requirements}
+
+\begin{itemize}[leftmargin=*]
+  \item Unity 6000.0 or newer.
+  \item The Unity Input System package.
+  \item The MLGWorks.Utils dependency.
+\end{itemize}
+
+\subsection{Installing from a Unity project}
+
+For a Git-based UPM installation, add the package dependency in the consuming project's \texttt{Packages/manifest.json}:
+
+\begin{lstlisting}[style=csharp]
+"com.mlgworks.devconsole":
+  "https://github.com/TrickShotMLG02/MLGWorks.DevConsole.git"
+\end{lstlisting}
+
+If the repository is being used directly as an Assets package, place the \texttt{MLGWorks} directory under the project's \texttt{Assets} directory and allow Unity to import the generated metadata files.
+
+\subsection{First-time setup}
+
+\begin{enumerate}[leftmargin=*]
+  \item Open the project in Unity.
+  \item Add the \texttt{DevConsole} prefab to a scene.
+  \item Open \textbf{Window $\rightarrow$ MLGWorks $\rightarrow$ DevConsole Commands}.
+  \item Create a \texttt{DevConsoleCommandSettings} asset, or select the included asset.
+  \item Click \textbf{Refresh Discovery}.
+  \item Assign the asset to the selected DevConsole object, or place it under \texttt{Resources/} as \texttt{DevConsoleCommandSettings.asset}.
+  \item Enter Play Mode and use the configured input action to open the console.
+\end{enumerate}
+
+\section{Architecture}
+
+The runtime is split into focused services. \texttt{DevConsole} coordinates the services, while interfaces make the core behavior easy to replace in tests or custom integrations.
+
+\begin{longtable}{p{0.29\textwidth}p{0.63\textwidth}}
+\toprule
+\textbf{Service} & \textbf{Responsibility} \\
+\midrule
+\endhead
+\texttt{ICommandRegistry} & Stores command metadata and registers commands from the catalog. \\
+\texttt{ICommandExecutor} & Parses input, converts arguments, and invokes registered commands. \\
+\texttt{IAutocompleteEngine} & Provides command and argument completion behavior. \\
+\texttt{ICommandHistory} & Tracks previous input and draft restoration. \\
+\texttt{IConsoleInput} & Abstracts input action subscription and disposal. \\
+\texttt{IConsoleOutput} & Receives command results and log messages. \\
+\texttt{IScrollbackBuffer} & Limits and stores displayed console lines. \\
+\bottomrule
+\end{longtable}
+
+\section{Defining commands}
+
+Commands are public or private static methods decorated with \texttt{CommandAttribute}. The method's declaring type does not need to inherit from a special base class.
+
+\begin{lstlisting}[style=csharp]
+using MLGWorks.DevConsole.Runtime.Commands;
+
+public static class GameCommands
+{
+    [Command("weather", "Changes the current weather", "w")]
+    public static string Weather(string value)
+    {
+        return $"Weather changed to {value}.";
+    }
+}
+\end{lstlisting}
+
+The first constructor argument is the command name. The second is an optional description. Remaining positional string arguments are aliases.
+
+\subsection{Parameters}
+
+Parameters are parsed from whitespace-separated input. Supported conversions include strings, booleans, numeric types, enums, and types handled by the utility conversion layer. Optional C\# parameters are represented as optional command arguments.
+
+\begin{lstlisting}[style=csharp]
+[Command("spawn", "Spawns an object")]
+public static string Spawn(string prefab, int count = 1)
+{
+    return $"Requested {count} instance(s) of {prefab}.";
+}
+\end{lstlisting}
+
+\subsection{Danger levels and safe defaults}
+
+Commands can declare their editor presentation and initial catalog state with named attribute properties:
+
+\begin{lstlisting}[style=csharp]
+[Command(
+    "reset-save",
+    "Deletes the current save data",
+    DangerLevel = CommandDangerLevel.Dangerous,
+    EnabledByDefault = false)]
+public static string ResetSave() => "Save reset.";
+\end{lstlisting}
+
+The available levels are \texttt{None}, \texttt{Warning}, and \texttt{Dangerous}. The catalog displays warnings in yellow and dangerous commands in red. A category uses the highest severity among its commands. \texttt{EnabledByDefault} only controls a newly discovered entry; rediscovery preserves an existing user's enabled state.
+
+\begin{safety}
+Danger levels are a review and UX aid, not an authorization system. Add project-specific confirmation, permissions, or build constraints before exposing destructive commands to untrusted users.
+\end{safety}
+
+\section{Command catalog workflow}
+
+\subsection{Discovery}
+
+The editor scans loaded assemblies for methods carrying \texttt{CommandAttribute}. Each entry stores the assembly, declaring type, method, parameter type names, command name, aliases, description, danger level, and state. A stable identity is derived from the assembly, type, method, and parameter signature.
+
+\subsection{Refreshing without losing settings}
+
+Click \textbf{Refresh Discovery} after adding or changing command methods. Existing entries are matched by stable identity, so their enabled or disabled state is retained. New entries use \texttt{EnabledByDefault}.
+
+\subsection{Classes and bulk controls}
+
+Commands are grouped by declaring type. The class checkbox disables or enables the complete class. Each category also has one dynamic bulk button: it shows \textbf{Enable All} when an eligible command is disabled and \textbf{Disable All} when all eligible commands are enabled.
+
+\subsection{Obsolete entries}
+
+When a command disappears from source, the catalog retains it as obsolete. Obsolete entries are not registered at runtime. This allows accidentally deleted scripts to be restored without losing their previous state. Use \textbf{Remove Obsolete} only after confirming that recovery is no longer needed.
+
+\subsection{Test-only entries}
+
+Commands discovered in assemblies named like \texttt{.Tests}, \texttt{.EditorTests}, or \texttt{.PlayModeTests} are marked test-only. They remain visible for review but are disabled in the catalog, excluded from runtime registration, and excluded from command/disabled metrics. Tests can still call methods directly or explicitly use the test registry path.
+
+\subsection{Search}
+
+The command window supports focused search:
+
+\begin{itemize}[leftmargin=*]
+  \item No prefix: search command names only.
+  \item \texttt{\$}: search declaring classes and namespaces.
+  \item \texttt{\#}: search all catalog metadata, including command, class, namespace, assembly, and method names.
+\end{itemize}
+
+\section{Runtime behavior}
+
+At startup, DevConsole first uses an explicitly assigned settings asset. If none is assigned, it loads \texttt{DevConsoleCommandSettings} from the Resources folder. If neither is available, it clears the command registry and logs a configuration warning. It never silently falls back to runtime reflection discovery.
+
+\begin{lstlisting}[style=csharp]
+// Explicit assignment is preferred on the DevConsole component.
+// Otherwise place the catalog at:
+// Assets/.../Resources/DevConsoleCommandSettings.asset
+\end{lstlisting}
+
+Only enabled, non-obsolete, non-test-only commands from enabled classes are resolved and registered. Aliases are registered alongside the primary name. Invalid or stale entries are skipped with a warning.
+
+\section{Built-in commands}
+
+The package includes several command groups:
+
+\begin{longtable}{p{0.25\textwidth}p{0.67\textwidth}}
+\toprule
+\textbf{Group} & \textbf{Purpose} \\
+\midrule
+\texttt{BaseCommands} & Help, clear, and console control commands. \\
+\texttt{MathCommands} & Basic arithmetic, rounding, comparison, and numeric helpers. \\
+\texttt{VariablesCommands} & Reflection-based get/set access to fields and properties. \\
+\texttt{ExecutionCommands} & Reflection-based method invocation; disabled by default and dangerous. \\
+\bottomrule
+\end{longtable}
+
+The \texttt{get} command is a warning-level command. The \texttt{set} and \texttt{invoke} commands are dangerous; \texttt{invoke} is disabled by default.
+
+\section{Input, UI, and logging}
+
+The prefab includes the input and UI components required to display the console. The Input System action asset provides the open/close, submit, navigation, and autocomplete actions. The input source implements disposal so action maps are disabled and released with the component lifecycle.
+
+The console subscribes to the MLGWorks logging service and forwards new log batches into a bounded scrollback buffer. Configure the UI references on the prefab if creating a custom console layout.
+
+\section{Testing}
+
+Run both test suites in Unity Test Runner:
+
+\begin{enumerate}[leftmargin=*]
+  \item Open \textbf{Window $\rightarrow$ General $\rightarrow$ Test Runner}.
+  \item Run the \textbf{EditMode} tests.
+  \item Run the \textbf{PlayMode} tests.
+  \item Test a player build after changing command signatures or catalog entries.
+\end{enumerate}
+
+The tests cover core services, command parsing, history edge cases, autocomplete, reflection helpers, built-in commands, math edge cases, catalog state preservation, obsolete commands, test-only filtering, input disposal, and regression scenarios.
+
+\section{Troubleshooting}
+
+\begin{longtable}{p{0.32\textwidth}p{0.60\textwidth}}
+\toprule
+\textbf{Symptom} & \textbf{Resolution} \\
+\midrule
+No commands appear & Assign a catalog or put it under a Resources folder, then refresh discovery. \\
+A command is missing & Check the command and declaring class are enabled, then inspect obsolete entries and refresh. \\
+A command is stale & The method signature changed; refresh discovery and review the obsolete entry. \\
+Test commands appear disabled & This is intentional; they are excluded from runtime catalog registration. \\
+Danger color is missing & Refresh discovery so the catalog receives current attribute metadata. \\
+A player build cannot resolve a command & Add preservation metadata for reflection and verify the method is included in the target assembly. \\
+\bottomrule
+\end{longtable}
+
+\section{Production checklist}
+
+\begin{itemize}[leftmargin=*]
+  \item Refresh and review the command catalog before creating a release build.
+  \item Remove obsolete entries only after confirming they are no longer needed.
+  \item Keep dangerous commands disabled unless the build explicitly requires them.
+  \item Add confirmation and authorization around destructive operations.
+  \item Verify the catalog is included in the target build.
+  \item Run EditMode and PlayMode tests.
+  \item Test an IL2CPP player build for reflection and code stripping issues.
+  \item Review the catalog and generated build contents before distribution.
+\end{itemize}
+
+\section{Extending the asset}
+
+New commands require only the attribute and a compatible static method. For larger integrations, depend on the public interfaces rather than concrete implementations. This allows custom input sources, output sinks, command registries, autocomplete providers, and history implementations without changing the console's orchestration code.
+
+When adding new serialized catalog metadata, preserve stable identities and add migration tests. Never overwrite existing user state during discovery unless the change is explicitly documented as breaking.
+
+\section{License}
+
+MLGWorks DevConsole is distributed under the MIT License. See the repository's \texttt{LICENSE} file for the complete text.
+
+\end{document}
