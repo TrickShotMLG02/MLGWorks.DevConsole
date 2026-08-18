@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace MLGWorks.DevConsole.Runtime.Core
 {
@@ -13,15 +13,15 @@ namespace MLGWorks.DevConsole.Runtime.Core
     [DisallowMultipleComponent]
     public class InputHandler : MonoBehaviour
     {
-        private DevConsoleInputActions _input;
-        private List<KeyCode?> _disabledKeys = new();
+        private IConsoleInput _input;
+        private readonly List<KeyCode?> _disabledKeys = new();
 
         /// <summary>
         /// Initializes input actions and disables conflicting UI keys.
         /// </summary>
         private void Awake()
         {
-            _input = new DevConsoleInputActions();
+            _input = new ConsoleInputSource();
             DisableUIKeys();
         }
 
@@ -31,8 +31,13 @@ namespace MLGWorks.DevConsole.Runtime.Core
         private void DisableUIKeys()
         {
             _disabledKeys.Clear();
-            _disabledKeys.Add(GetKeyCodeForAction(_input.DevConsole.CommandHistoryPrevious));
-            _disabledKeys.Add(GetKeyCodeForAction(_input.DevConsole.CommandHistoryNext));
+
+            foreach (var bindingPath in _input.HistoryBindingPaths)
+            {
+                var keyCode = GetKeyCodeForBindingPath(bindingPath);
+                if (keyCode.HasValue && !_disabledKeys.Contains(keyCode))
+                    _disabledKeys.Add(keyCode);
+            }
         }
 
         /// <summary>
@@ -40,11 +45,11 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// </summary>
         private void OnEnable()
         {
-            _input.DevConsole.ToggleConsole.performed += OnToggleConsole;
-            _input.DevConsole.SubmitCommand.performed += OnSubmitCommand;
-            _input.DevConsole.AutoComplete.performed += OnAutoComplete;
-            _input.DevConsole.CommandHistoryPrevious.performed += OnCommandHistoryPrevious;
-            _input.DevConsole.CommandHistoryNext.performed += OnCommandHistoryNext;
+            _input.ToggleConsole += OnToggleConsole;
+            _input.SubmitCommand += OnSubmitCommand;
+            _input.AutoComplete += OnAutoComplete;
+            _input.HistoryPrevious += OnCommandHistoryPrevious;
+            _input.HistoryNext += OnCommandHistoryNext;
             _input.Enable();
         }
 
@@ -53,41 +58,42 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// </summary>
         private void OnDisable()
         {
-            _input.DevConsole.ToggleConsole.performed -= OnToggleConsole;
-            _input.DevConsole.SubmitCommand.performed -= OnSubmitCommand;
-            _input.DevConsole.AutoComplete.performed -= OnAutoComplete;
-            _input.DevConsole.CommandHistoryPrevious.performed -= OnCommandHistoryPrevious;
-            _input.DevConsole.CommandHistoryNext.performed -= OnCommandHistoryNext;
+            if (_input == null)
+                return;
+
+            _input.ToggleConsole -= OnToggleConsole;
+            _input.SubmitCommand -= OnSubmitCommand;
+            _input.AutoComplete -= OnAutoComplete;
+            _input.HistoryPrevious -= OnCommandHistoryPrevious;
+            _input.HistoryNext -= OnCommandHistoryNext;
             _input.Disable();
         }
 
-        /// <summary>
-        /// Attempts to find the first keyboard KeyCode bound to a given input action.
-        /// </summary>
-        /// <param name="action">Input action to examine.</param>
-        /// <returns>The KeyCode if found; otherwise null.</returns>
-        private KeyCode? GetKeyCodeForAction(InputAction action)
+        private void OnDestroy()
         {
-            // Find first binding on keyboard device
-            foreach (var binding in action.bindings)
-            {
-                if (binding.effectivePath.StartsWith("<Keyboard>"))
-                {
-                    // Example path: "<Keyboard>/p"
-                    var parts = binding.effectivePath.Split('/');
-                    if (parts.Length > 1)
-                    {
-                        string keyName = parts[1]; // e.g. "p"
+            _input?.Dispose();
+        }
 
-                        foreach (KeyCode key in Enum.GetValues(typeof(KeyCode)))
-                        {
-                            if (key.ToString().Equals(keyName, StringComparison.OrdinalIgnoreCase))
-                                return key;
-                        }
-                    }
-                }
+        /// <summary>
+        /// Attempts to find a keyboard KeyCode from a binding path.
+        /// </summary>
+        private KeyCode? GetKeyCodeForBindingPath(string bindingPath)
+        {
+            if (string.IsNullOrEmpty(bindingPath) || !bindingPath.StartsWith("<Keyboard>"))
+                return null;
+
+            var parts = bindingPath.Split('/');
+            if (parts.Length < 2)
+                return null;
+
+            string keyName = parts[1];
+            foreach (KeyCode key in Enum.GetValues(typeof(KeyCode)))
+            {
+                if (key.ToString().Equals(keyName, StringComparison.OrdinalIgnoreCase))
+                    return key;
             }
-            return null; // no keyboard binding found or failed to parse
+
+            return null;
         }
 
         /// <summary>
@@ -95,10 +101,10 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// </summary>
         public void OnGUI()
         {
-            if (IsConsoleVisible && Event.current.isKey)
+            if (IsConsoleVisible && Event.current.isKey &&
+                _disabledKeys.Any(k => k == Event.current.keyCode))
             {
-                if (_disabledKeys.Any(k => k == Event.current.keyCode))
-                    Event.current.Use();
+                Event.current.Use();
             }
         }
 
@@ -107,12 +113,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             DevConsole.Instance.ConsoleUI != null &&
             DevConsole.Instance.ConsoleUI.IsVisible;
 
-        /// <summary>
-        /// Handles toggling the console UI visibility.
-        /// Does nothing if input field is focused to avoid accidental toggling.
-        /// </summary>
-        /// <param name="context">Input callback context.</param>
-        private void OnToggleConsole(InputAction.CallbackContext context)
+        private void OnToggleConsole()
         {
             if (DevConsole.Instance.ConsoleUI.IsInputFieldFocused)
                 return;
@@ -120,52 +121,28 @@ namespace MLGWorks.DevConsole.Runtime.Core
             DevConsole.Instance.ConsoleUI.ToggleVisibility();
         }
 
-        /// <summary>
-        /// Submits the current input in the console UI.
-        /// </summary>
-        /// <param name="context">Input callback context.</param>
-        private void OnSubmitCommand(InputAction.CallbackContext context)
+        private void OnSubmitCommand()
         {
-            if (!IsConsoleVisible)
-                return;
-
-            DevConsole.Instance.ConsoleUI.OnInputSubmit();
+            if (IsConsoleVisible)
+                DevConsole.Instance.ConsoleUI.OnInputSubmit();
         }
 
-        /// <summary>
-        /// Requests autocomplete from the console UI.
-        /// </summary>
-        /// <param name="context">Input callback context.</param>
-        private void OnAutoComplete(InputAction.CallbackContext context)
+        private void OnAutoComplete()
         {
-            if (!IsConsoleVisible)
-                return;
-
-            DevConsole.Instance.ConsoleUI.RequestAutoComplete();
+            if (IsConsoleVisible)
+                DevConsole.Instance.ConsoleUI.RequestAutoComplete();
         }
 
-        /// <summary>
-        /// Navigates to the previous command in history.
-        /// </summary>
-        /// <param name="context">Input callback context.</param>
-        private void OnCommandHistoryPrevious(InputAction.CallbackContext context)
+        private void OnCommandHistoryPrevious()
         {
-            if (!IsConsoleVisible)
-                return;
-
-            DevConsole.Instance.ConsoleUI.CommandHistoryPrevious();
+            if (IsConsoleVisible)
+                DevConsole.Instance.ConsoleUI.CommandHistoryPrevious();
         }
 
-        /// <summary>
-        /// Navigates to the next command in history.
-        /// </summary>
-        /// <param name="context">Input callback context.</param>
-        private void OnCommandHistoryNext(InputAction.CallbackContext context)
+        private void OnCommandHistoryNext()
         {
-            if (!IsConsoleVisible)
-                return;
-
-            DevConsole.Instance.ConsoleUI.CommandHistoryNext();
+            if (IsConsoleVisible)
+                DevConsole.Instance.ConsoleUI.CommandHistoryNext();
         }
     }
 }

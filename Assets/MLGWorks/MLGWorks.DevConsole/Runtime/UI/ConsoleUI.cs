@@ -1,5 +1,6 @@
 using MLGWorks.DevConsole.Runtime.Commands;
 using MLGWorks.DevConsole.Runtime.Core;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
     /// Uses ScrollbackBuffer to limit displayed log lines.
     /// </summary>
     [RequireComponent(typeof(InputHandler)), DisallowMultipleComponent]
-    public class ConsoleUI : MonoBehaviour
+    public class ConsoleUI : MonoBehaviour, IConsoleOutput
     {
         [Header("References")]
         [SerializeField] private Canvas _consoleCanvas;
@@ -39,13 +40,15 @@ namespace MLGWorks.DevConsole.Runtime.UI
         [SerializeField] private Color _invalidCommandColor = new Color(0.8235f, 0.0157f, 0.1765f); // #D2042D
 
         // Buffer containing the lines to display on the console
-        private ScrollbackBuffer _logBuffer;
+        private IScrollbackBuffer _logBuffer;
 
         // Dictionary for quick lookup of log level colors
         private readonly Dictionary<LogLevel, Color> _levelColors = new();
 
-        private AutocompleteEngine _autocomplete;
-        private ConsoleHistory _history;
+        private IAutocompleteEngine _autocomplete;
+        private ICommandHistory _history;
+        private ICommandExecutor _commandExecutor;
+        private bool _servicesConfigured;
 
         private Color _originalInputFieldColor;
 
@@ -57,11 +60,16 @@ namespace MLGWorks.DevConsole.Runtime.UI
             // Disable console UI on start
             _consoleCanvas.gameObject.SetActive(false);
 
-            // Initialize buffer and helpers
+            // Initialize buffer and default services. DevConsole replaces these with
+            // its shared instances during its own Awake method.
             _logBuffer = new ScrollbackBuffer(_maxLinesInBuffer);
-
-            _autocomplete = new AutocompleteEngine();
-            _history = new ConsoleHistory();
+            if (!_servicesConfigured)
+            {
+                ConfigureServices(
+                    new CommandManagerExecutor(this),
+                    new ConsoleHistory(),
+                    new AutocompleteEngine());
+            }
 
             // Setup the color dictionary for log levels
             _levelColors[LogLevel.Debug] = _debugColor;
@@ -72,6 +80,20 @@ namespace MLGWorks.DevConsole.Runtime.UI
             _levelColors[LogLevel.Output] = _outputColor;
 
             _originalInputFieldColor = _inputField.textComponent.color;
+        }
+
+        /// <summary>
+        /// Replaces the default services with shared or test-specific implementations.
+        /// </summary>
+        public void ConfigureServices(
+            ICommandExecutor commandExecutor,
+            ICommandHistory history,
+            IAutocompleteEngine autocomplete)
+        {
+            _commandExecutor = commandExecutor ?? new CommandManagerExecutor(this);
+            _history = history ?? new ConsoleHistory();
+            _autocomplete = autocomplete ?? new AutocompleteEngine();
+            _servicesConfigured = true;
         }
 
         /// <summary>
@@ -193,7 +215,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         private void SubmitCommand(string input)
         {
             string result = null;
-            bool succeeded = CommandManager.TryExecute(input, out result);
+            bool succeeded = _commandExecutor.TryExecute(input, out result);
 
             if (!string.IsNullOrEmpty(result))
                 AppendToOutput(result, succeeded ? LogLevel.Output : LogLevel.Error);

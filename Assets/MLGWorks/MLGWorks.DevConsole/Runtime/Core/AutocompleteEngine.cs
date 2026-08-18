@@ -1,4 +1,5 @@
 using MLGWorks.DevConsole.Runtime.Commands;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 using System;
 using System.Linq;
 using System.Text;
@@ -10,11 +11,17 @@ namespace MLGWorks.DevConsole.Runtime.Core
     /// Suggests the full command including typed parts and the missing remainder.
     /// Also manages applying autocomplete.
     /// </summary>
-    public class AutocompleteEngine
+    public class AutocompleteEngine : IAutocompleteEngine
     {
+        private readonly ICommandRegistry _commandRegistry;
         private CommandInfo _matchedCommand;
         private string _matchedAlias;
         private bool _performAutoComplete;
+
+        public AutocompleteEngine(ICommandRegistry commandRegistry = null)
+        {
+            _commandRegistry = commandRegistry ?? CommandManager.Registry;
+        }
 
         /// <summary>
         /// Gets an autocomplete suggestion for the given input.
@@ -43,7 +50,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
             string[] typedArgs = tokens.Skip(1).ToArray();
 
             // Find matching command by prefix, case-insensitive
-            var matchKVP = CommandManager.Commands
+            var matchKVP = _commandRegistry.Commands
                 .FirstOrDefault(pair => pair.Key.StartsWith(typedCommand, StringComparison.OrdinalIgnoreCase));
 
             var matchedAlias = matchKVP.Key;

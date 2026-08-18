@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 
 namespace MLGWorks.DevConsole.Runtime.UI
 {
@@ -7,7 +8,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
     /// Maintains a scrollback buffer that holds a limited number of lines.
     /// Automatically removes the oldest lines when the buffer exceeds the maximum size.
     /// </summary>
-    public class ScrollbackBuffer
+    public class ScrollbackBuffer : IScrollbackBuffer
     {
         private readonly Queue<string> lines = new Queue<string>();
         private readonly int maxLines;

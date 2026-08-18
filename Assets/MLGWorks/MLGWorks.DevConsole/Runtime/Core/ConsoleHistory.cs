@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 using UnityEngine;
 
 namespace MLGWorks.DevConsole.Runtime.Core
@@ -8,7 +9,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
     /// Maintains a history of entered console commands and allows navigation
     /// through previous and next commands, preserving temporary unsaved input.
     /// </summary>
-    public class ConsoleHistory
+    public class ConsoleHistory : ICommandHistory
     {
         private readonly List<string> _history = new List<string>();
         private int _index = -1;
