@@ -19,6 +19,9 @@ namespace MLGWorks.DevConsole.Runtime.UI
         /// <param name="maxLines">The maximum number of lines to retain in the buffer.</param>
         public ScrollbackBuffer(int maxLines)
         {
+            if (maxLines <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxLines), "The maximum line count must be greater than zero.");
+
             this.maxLines = maxLines;
         }
 
@@ -29,6 +32,9 @@ namespace MLGWorks.DevConsole.Runtime.UI
         /// <param name="line">The line to add.</param>
         public void Add(string line)
         {
+            if (line == null)
+                throw new ArgumentNullException(nameof(line));
+
             // Split on all newlines (\r\n, \n, \r)
             var splitLines = line.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
 
