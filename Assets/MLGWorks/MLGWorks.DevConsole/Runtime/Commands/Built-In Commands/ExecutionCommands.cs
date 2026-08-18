@@ -22,6 +22,9 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         {
             args ??= Array.Empty<string>();
 
+            if (string.IsNullOrWhiteSpace(fullMethodName))
+                return "Method name cannot be empty.";
+
             if (!TryResolveTargetAndMethod(fullMethodName, out var target, out var matchedMethod))
                 return $"Method '{fullMethodName}' not found.";
 
@@ -117,6 +120,9 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
             targetInstance = null;
             matchedMethod = null;
 
+            if (string.IsNullOrWhiteSpace(fullMethodName))
+                return false;
+
             var parts = fullMethodName.Split('.');
             if (parts.Length < 2)
                 return false;
@@ -144,56 +150,67 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
                 }
             }
 
-            // Try instance traversal
-            Type currentType = ReflectionUtils.FindType(parts[0]);
-            if (currentType == null)
-                return false;
-
-            object currentInstance = TryGetSingletonInstance(currentType);
-            if (currentInstance == null)
-                return false;
-
-            for (int i = 1; i < parts.Length - 1; i++)
+            // Try instance traversal. Resolve the longest type prefix so
+            // namespace-qualified singleton types are supported as well.
+            for (int typeEnd = parts.Length - 1; typeEnd >= 1; typeEnd--)
             {
-                string memberName = parts[i];
-                var field = currentType.GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                var prop = currentType.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                Type currentType = ReflectionUtils.FindType(string.Join(".", parts.Take(typeEnd)));
+                if (currentType == null)
+                    continue;
 
-                object nextInstance = null;
+                object currentInstance = TryGetSingletonInstance(currentType);
+                if (currentInstance == null)
+                    continue;
 
-                if (field != null)
+                bool resolved = true;
+                for (int memberIndex = typeEnd; memberIndex < parts.Length - 1; memberIndex++)
                 {
-                    nextInstance = field.GetValue(currentInstance);
-                    currentType = field.FieldType;
-                }
-                else if (prop != null)
-                {
-                    nextInstance = prop.GetValue(currentInstance);
-                    currentType = prop.PropertyType;
-                }
-                else
-                {
-                    return false;
+                    string memberName = parts[memberIndex];
+                    var field = currentType.GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    var prop = currentType.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                    object nextInstance;
+                    if (field != null)
+                    {
+                        nextInstance = field.GetValue(currentInstance);
+                        currentType = field.FieldType;
+                    }
+                    else if (prop != null)
+                    {
+                        nextInstance = prop.GetValue(currentInstance);
+                        currentType = prop.PropertyType;
+                    }
+                    else
+                    {
+                        resolved = false;
+                        break;
+                    }
+
+                    if (nextInstance == null)
+                    {
+                        resolved = false;
+                        break;
+                    }
+
+                    currentInstance = nextInstance;
                 }
 
-                if (nextInstance == null)
-                    return false;
+                if (!resolved)
+                    continue;
 
-                currentInstance = nextInstance;
+                var instanceMethods = currentType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(m => m.Name.Equals(parts[^1], StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
+
+                if (instanceMethods.Length == 0)
+                    continue;
+
+                targetInstance = currentInstance;
+                matchedMethod = instanceMethods.First();
+                return true;
             }
 
-            // Final method name
-            string finalMethodName = parts[^1];
-            var instanceMethods = currentType.GetMethods(BindingFlags.Instance | BindingFlags.Public)
-                .Where(m => m.Name.Equals(finalMethodName, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            if (instanceMethods.Length == 0)
-                return false;
-
-            targetInstance = currentInstance;
-            matchedMethod = instanceMethods.First();
-            return true;
+            return false;
         }
 
         public static object TryGetSingletonInstance(Type type)
