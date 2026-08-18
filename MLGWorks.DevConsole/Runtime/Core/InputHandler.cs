@@ -1,4 +1,3 @@
-using MLGWorks.DevConsole.Runtime.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,12 +95,17 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// </summary>
         public void OnGUI()
         {
-            if (Event.current.isKey)
+            if (IsConsoleVisible && Event.current.isKey)
             {
                 if (_disabledKeys.Any(k => k == Event.current.keyCode))
                     Event.current.Use();
             }
         }
+
+        private static bool IsConsoleVisible =>
+            DevConsole.Instance != null &&
+            DevConsole.Instance.ConsoleUI != null &&
+            DevConsole.Instance.ConsoleUI.IsVisible;
 
         /// <summary>
         /// Handles toggling the console UI visibility.
@@ -122,6 +126,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnSubmitCommand(InputAction.CallbackContext context)
         {
+            if (!IsConsoleVisible)
+                return;
+
             DevConsole.Instance.ConsoleUI.OnInputSubmit();
         }
 
@@ -131,6 +138,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnAutoComplete(InputAction.CallbackContext context)
         {
+            if (!IsConsoleVisible)
+                return;
+
             DevConsole.Instance.ConsoleUI.RequestAutoComplete();
         }
 
@@ -140,6 +150,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnCommandHistoryPrevious(InputAction.CallbackContext context)
         {
+            if (!IsConsoleVisible)
+                return;
+
             DevConsole.Instance.ConsoleUI.CommandHistoryPrevious();
         }
 
@@ -149,6 +162,9 @@ namespace MLGWorks.DevConsole.Runtime.Core
         /// <param name="context">Input callback context.</param>
         private void OnCommandHistoryNext(InputAction.CallbackContext context)
         {
+            if (!IsConsoleVisible)
+                return;
+
             DevConsole.Instance.ConsoleUI.CommandHistoryNext();
         }
     }

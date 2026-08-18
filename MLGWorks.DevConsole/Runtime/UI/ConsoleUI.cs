@@ -50,6 +50,7 @@ namespace MLGWorks.DevConsole.Runtime.UI
         private Color _originalInputFieldColor;
 
         public bool IsInputFieldFocused => _inputField.isFocused;
+        public bool IsVisible => _consoleCanvas != null && _consoleCanvas.gameObject.activeSelf;
 
         private void Awake()
         {
@@ -192,10 +193,10 @@ namespace MLGWorks.DevConsole.Runtime.UI
         private void SubmitCommand(string input)
         {
             string result = null;
-            CommandManager.TryExecute(input, out result);
+            bool succeeded = CommandManager.TryExecute(input, out result);
 
             if (!string.IsNullOrEmpty(result))
-                AppendToOutput(result, LogLevel.Output);
+                AppendToOutput(result, succeeded ? LogLevel.Output : LogLevel.Error);
         }
 
         /// <summary>
