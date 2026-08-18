@@ -16,7 +16,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         /// <param name="variableName">The name of the variable or property to get.</param>
         /// <param name="args">Optional arguments (not used here, but accepted for command signature compatibility).</param>
         /// <returns>A string describing the current value or an error message if not found.</returns>
-        [Command("get", "Gets the value of a variable of a given class")]
+        [Command("get", "Gets the value of a variable of a given class", DangerLevel = CommandDangerLevel.Warning)]
         public static string Get(string className, string variableName, string[] args = default)
         {
             Type type = ReflectionUtils.FindType(className);
@@ -47,7 +47,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         /// <param name="variableName">The name of the variable or property to set.</param>
         /// <param name="args">The value(s) to assign, parsed to the correct type.</param>
         /// <returns>A string describing the change or an error message if the operation failed.</returns>
-        [Command("set", "Sets the value of a variable of a given class to a specific value")]
+        [Command("set", "Sets the value of a variable of a given class to a specific value", DangerLevel = CommandDangerLevel.Dangerous)]
         public static string Set(string className, string variableName, string[] args)
         {
             if (args.Length < 1)

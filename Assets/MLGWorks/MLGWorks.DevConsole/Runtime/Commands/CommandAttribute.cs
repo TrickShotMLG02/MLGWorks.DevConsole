@@ -2,6 +2,13 @@ using System;
 
 namespace MLGWorks.DevConsole.Runtime.Commands
 {
+    public enum CommandDangerLevel
+    {
+        None = 0,
+        Warning = 1,
+        Dangerous = 2
+    }
+
     /// <summary>
     /// Marks a static method as a console command.
     /// Methods decorated with this attribute can be invoked via the developer console.
@@ -23,6 +30,11 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         /// Optional alternative names (aliases) for the command.
         /// </summary>
         public string[] Aliases { get; }
+
+        /// <summary>
+        /// Indicates whether the command should be highlighted as potentially harmful.
+        /// </summary>
+        public CommandDangerLevel DangerLevel { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandAttribute"/> class.

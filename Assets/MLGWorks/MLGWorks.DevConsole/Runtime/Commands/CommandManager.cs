@@ -1,6 +1,7 @@
 using MLGWorks.DevConsole.Runtime.UI;
 using MLGWorks.DevConsole.Runtime.Utils;
 using MLGWorks.DevConsole.Runtime.Abstractions;
+using MLGWorks.DevConsole.Runtime.Configuration;
 using MLGWorks.Utils.Logging;
 using System;
 using System.Collections.Generic;
@@ -83,6 +84,94 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         }
 
         /// <summary>
+        /// Registers only commands present and enabled in an editor-generated catalog.
+        /// </summary>
+        public static void RegisterFromSettings(DevConsoleCommandSettings settings)
+        {
+            if (settings == null)
+            {
+                RegisterAll();
+                return;
+            }
+
+            _commands.Clear();
+            _commandInfos.Clear();
+
+            foreach (var definition in settings.GetEnabledCommands())
+            {
+                if (string.IsNullOrWhiteSpace(definition.commandName))
+                {
+                    Logger.Warning("[DevConsole] Ignored a command catalog entry without a command name.");
+                    continue;
+                }
+
+                if (!TryResolveDefinition(definition, out var method))
+                    continue;
+
+                var command = new CommandInfo(
+                    definition.commandName,
+                    definition.description,
+                    method,
+                    definition.aliases);
+
+                RegisterCommand(definition.commandName, command);
+
+                if (!_commandInfos.Contains(command))
+                    _commandInfos.Add(command);
+
+                foreach (var alias in definition.aliases ?? Array.Empty<string>())
+                    RegisterCommand(alias, command);
+            }
+        }
+
+        private static bool TryResolveDefinition(DevConsoleCommandDefinition definition, out MethodInfo method)
+        {
+            method = null;
+            if (definition == null || string.IsNullOrWhiteSpace(definition.assemblyName) ||
+                string.IsNullOrWhiteSpace(definition.declaringTypeName) ||
+                string.IsNullOrWhiteSpace(definition.methodName))
+            {
+                Logger.Warning("[DevConsole] Ignored an incomplete command catalog entry.");
+                return false;
+            }
+
+            var assembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(item => item.GetName().Name == definition.assemblyName);
+            var type = assembly?.GetType(definition.declaringTypeName) ??
+                       Type.GetType($"{definition.declaringTypeName}, {definition.assemblyName}");
+
+            if (type == null)
+            {
+                Logger.Warning($"[DevConsole] Could not resolve command type '{definition.declaringTypeName}'.");
+                return false;
+            }
+
+            method = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                .FirstOrDefault(candidate =>
+                    candidate.Name == definition.methodName &&
+                    candidate.GetCustomAttribute<CommandAttribute>() != null &&
+                    candidate.GetParameters().Length == (definition.parameterTypeNames?.Length ?? 0) &&
+                    candidate.GetParameters().Select(parameter => parameter.ParameterType.AssemblyQualifiedName)
+                        .SequenceEqual(definition.parameterTypeNames ?? Array.Empty<string>()));
+
+            if (method == null)
+            {
+                Logger.Warning($"[DevConsole] Could not resolve command method '{definition.declaringTypeName}.{definition.methodName}'.");
+                return false;
+            }
+
+            var attribute = method.GetCustomAttribute<CommandAttribute>();
+            if (!string.Equals(attribute.Name, definition.commandName, StringComparison.OrdinalIgnoreCase))
+            {
+                Logger.Warning($"[DevConsole] Catalog entry for '{definition.commandName}' is stale; refresh command settings.");
+                method = null;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Registers a single command or alias with the internal dictionary.
         /// Ignores duplicates and logs a warning.
         /// </summary>
@@ -90,6 +179,9 @@ namespace MLGWorks.DevConsole.Runtime.Commands
         /// <param name="command">Associated <see cref="CommandInfo"/>.</param>
         private static void RegisterCommand(string name, CommandInfo command)
         {
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
             var key = name.ToLowerInvariant();
             if (_commands.ContainsKey(key))
             {

@@ -1,0 +1,480 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acabf080df573ea40a748550aca53d90, type: 3}
+  m_Name: DevConsoleCommandSettings
+  m_EditorClassIdentifier: MLGWorks.DevConsole::MLGWorks.DevConsole.Runtime.Configuration.DevConsoleCommandSettings
+  _commands:
+  - commandName: abs
+    description: Returns the absolute value of a number
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Abs
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: add
+    description: Adds two numbers
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Add
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: catalog-obsolete
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.EditorTests
+    declaringTypeName: MLGWorks.DevConsole.Tests.EditorTests.CatalogTestCommands
+    methodName: Obsolete
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: catalog-second
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.EditorTests
+    declaringTypeName: MLGWorks.DevConsole.Tests.EditorTests.CatalogTestCommands
+    methodName: Second
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: catalog-visible
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.EditorTests
+    declaringTypeName: MLGWorks.DevConsole.Tests.EditorTests.CatalogTestCommands
+    methodName: Visible
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: ceil
+    description: Rounds up to the nearest whole number
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Ceil
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: clear
+    description: Clears console output
+    aliases:
+    - cls
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: Clear
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: close
+    description: Closes the Console Window
+    aliases:
+    - hide
+    - exit
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: CloseConsole
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: commands
+    description: Displays all available commands without their usage
+    aliases:
+    - cmds
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: Commands
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: dangerous
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandInfoTests
+    methodName: DangerousCommand
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 2
+  - commandName: div
+    description: Divides the first number by the second
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Divide
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: echo
+    description: Echoes back the input text
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Examples.DemoCommands
+    methodName: Echo
+    parameterTypeNames:
+    - System.String[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: floor
+    description: Rounds down to the nearest whole number
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Floor
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: get
+    description: Gets the value of a variable of a given class
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.GetCommand
+    methodName: Get
+    parameterTypeNames:
+    - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.String[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 1
+  - commandName: help
+    description: Displays all available commands and their usage
+    aliases:
+    - '?'
+    - h
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: Help
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: invoke
+    description: Invokes a static or instance method on a class with string args
+    aliases:
+    - exec
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.ExecutionCommands
+    methodName: Invoke
+    parameterTypeNames:
+    - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.String[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 2
+  - commandName: max
+    description: Returns the larger of two numbers
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Max
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: min
+    description: Returns the smaller of two numbers
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Min
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: mod
+    description: Returns the remainder of a divided by b
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Modulo
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: mul
+    description: Multiplies two numbers
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Multiply
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: openlogs
+    description: Opens the log folder
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: OpenLogFolder
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: platform
+    description: Displays the platform the game is running on
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: Platform
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: pow
+    description: Raises a to the power of b
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Power
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: round
+    description: Rounds to the nearest integer
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Round
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: set
+    description: Sets the value of a variable of a given class to a specific value
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.GetCommand
+    methodName: Set
+    parameterTypeNames:
+    - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.String[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 2
+  - commandName: sign
+    description: Returns the sign of a number (-1, 0, 1)
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Sign
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: sqrt
+    description: Returns the square root of a number
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Sqrt
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: sub
+    description: Subtracts the second number from the first
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.MathCommands
+    methodName: Subtract
+    parameterTypeNames:
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: test-add
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandManagerTests
+    methodName: Add
+    parameterTypeNames:
+    - System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    - System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: test-array
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandManagerTests
+    methodName: Array
+    parameterTypeNames:
+    - System.String[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: test-bool
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandManagerTests
+    methodName: Bool
+    parameterTypeNames:
+    - System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: test-echo
+    description: Echoes a value
+    aliases:
+    - te
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandManagerTests
+    methodName: Echo
+    parameterTypeNames:
+    - System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: test-join
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandManagerTests
+    methodName: Join
+    parameterTypeNames:
+    - System.String[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: test-optional
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandManagerTests
+    methodName: Optional
+    parameterTypeNames:
+    - System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: test-throw
+    description: 
+    aliases: []
+    assemblyName: MLGWorks.DevConsole.Tests
+    declaringTypeName: MLGWorks.DevConsole.Tests.CoreTests.CommandManagerTests
+    methodName: Throw
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 1
+    dangerLevel: 0
+  - commandName: time
+    description: Displays the current system time
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: Time
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: uptime
+    description: Displays how long the application has been running
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: Uptime
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  - commandName: version
+    description: Displays the application version
+    aliases: []
+    assemblyName: MLGWorks.DevConsole
+    declaringTypeName: MLGWorks.DevConsole.Runtime.Commands.BuiltIn.BaseCommands
+    methodName: Version
+    parameterTypeNames: []
+    enabled: 1
+    isObsolete: 0
+    isTestOnly: 0
+    dangerLevel: 0
+  _disabledTypeNames: []
