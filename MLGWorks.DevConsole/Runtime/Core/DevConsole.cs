@@ -22,6 +22,7 @@ namespace MLGWorks.DevConsole.Runtime.Core
         private IAutocompleteEngine _autocomplete;
         private ICommandExecutor _commandExecutor;
         private ConsoleUI _consoleUI;
+        private InputHandler _inputHandler;
 
         public ConsoleUI ConsoleUI => _consoleUI;
 
@@ -30,12 +31,14 @@ namespace MLGWorks.DevConsole.Runtime.Core
             base.Awake();
 
             _consoleUI = GetComponent<ConsoleUI>();
+            _inputHandler = GetComponent<InputHandler>();
             _history = new ConsoleHistory();
             _autocomplete = new AutocompleteEngine(CommandManager.Registry);
             _commandExecutor = new CommandManagerExecutor(_consoleUI);
 
             CommandManager.Registry.RegisterAll();
             _consoleUI.ConfigureServices(_commandExecutor, _history, _autocomplete);
+            _inputHandler.Configure(new ConsoleInputSource(), _consoleUI);
             CommandManager.Output = _consoleUI;
 
             Logger.Instance.OnNewLogBatch += HandleLogger;

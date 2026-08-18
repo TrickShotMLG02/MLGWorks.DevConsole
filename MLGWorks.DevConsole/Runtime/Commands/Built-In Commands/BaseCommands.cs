@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using UnityEngine;
 using MLGWorks.DevConsole.Runtime.UI;
+using MLGWorks.DevConsole.Runtime.Abstractions;
 using Logger = MLGWorks.Utils.Logging.Logger;
 
 namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
@@ -23,7 +24,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         [Command("clear", "Clears console output", "cls")]
         public static void Clear()
         {
-            Core.DevConsole.Instance.ConsoleUI.ClearLogs();
+            (CommandManager.Output as IConsoleActions)?.ClearLogs();
         }
 
         [Command("commands", "Displays all available commands without their usage", "cmds")]
@@ -40,7 +41,7 @@ namespace MLGWorks.DevConsole.Runtime.Commands.BuiltIn
         [Command("close", "Closes the Console Window", "hide", "exit")]
         public static void CloseConsole()
         {
-            Core.DevConsole.Instance.ConsoleUI.ToggleVisibility();
+            (CommandManager.Output as IConsoleActions)?.ToggleVisibility();
         }
 
         [Command("time", "Displays the current system time")]
