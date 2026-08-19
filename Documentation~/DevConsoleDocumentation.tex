@@ -124,9 +124,18 @@ The catalog is the source of truth at runtime. A missing catalog is a configurat
 For a Git-based UPM installation, add the package dependency in the consuming project's \texttt{Packages/manifest.json}:
 
 \begin{lstlisting}[style=csharp]
+"com.mlgworks.utils":
+  "https://github.com/TrickShotMLG02/MLGWorks.Utils.git",
 "com.mlgworks.devconsole":
   "https://github.com/TrickShotMLG02/MLGWorks.DevConsole.git"
 \end{lstlisting}
+
+The DevConsole package declares \texttt{com.mlgworks.utils} at semantic
+version \texttt{1.0.0}. The consuming project must therefore provide the
+Git source for Utils as a direct dependency; Unity Package Manager does not
+accept a Git URL in another package's dependency field. In the Package
+Manager window, install Utils first with \textbf{Add package from git URL},
+then install DevConsole using the same option.
 
 If the repository is being used directly as an Assets package, place the \texttt{MLGWorks} directory under the project's \texttt{Assets} directory and allow Unity to import the generated metadata files.
 

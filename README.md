@@ -8,13 +8,20 @@ A modular, extensible developer console for Unity with command discovery, autoco
 
 ## 📦 Install through Unity Package Manager
 
-In Unity, open **Window → Package Manager**, select **Add package from git URL**, and enter:
+Because both MLGWorks packages are Git-based UPM packages, add both Git URLs to the consuming project's `Packages/manifest.json`:
 
-```text
-https://github.com/TrickShotMLG02/MLGWorks.DevConsole.git
+```json
+{
+  "dependencies": {
+    "com.mlgworks.utils":
+      "https://github.com/TrickShotMLG02/MLGWorks.Utils.git",
+    "com.mlgworks.devconsole":
+      "https://github.com/TrickShotMLG02/MLGWorks.DevConsole.git"
+  }
+}
 ```
 
-The repository root is a UPM package named `com.mlgworks.devconsole` and automatically installs its `MLGWorks.Utils` dependency.
+Alternatively, add Utils first through Package Manager's **Add package from git URL** option, then add DevConsole. DevConsole declares Utils as version `1.0.0`, while the project manifest provides its Git source. Unity cannot resolve a Git URL directly from a package's dependency field.
 
 ## ✨ Highlights
 
@@ -41,7 +48,7 @@ The catalog is the runtime source of truth. If no catalog can be found, no comma
 
 ## 📖 Documentation
 
-The complete setup and configuration guide is available in the [LaTeX documentation](Documentation/DevConsoleDocumentation.pdf) and its [source](Documentation/DevConsoleDocumentation.tex).
+The complete setup and configuration guide is available in the [LaTeX documentation](Documentation~/DevConsoleDocumentation.pdf) and its [source](Documentation~/DevConsoleDocumentation.tex).
 
 The ready-to-import demonstration command is included in the `DevConsole Sample` package sample under `Samples~/DevConsoleSample`.
 
